@@ -3,6 +3,10 @@
 <PKG name="fr.ensicaen.smartcards.tb100like" aid="F0 54 42 31 30 30 4C 69 6B 65" major="1" minor="0">
 <APPLET aid="F0 54 42 31 30 30 4C 69 6B 65 00" instanceaid="" parameter="" authority="" privileges="" index="23608" name="TB100Like"/>
 <CLASS name="Constants"/>
+<CLASS name="File"/>
+<CLASS name="DedicatedFile"/>
+<CLASS name="ElementaryFile"/>
+<CLASS name="MasterFile"/>
 </PKG>
 <Libs/>
 </USER>
