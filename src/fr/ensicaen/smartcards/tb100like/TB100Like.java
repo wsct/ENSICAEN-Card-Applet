@@ -11,13 +11,17 @@ import javacard.framework.*;
  */
 public class TB100Like extends Applet {
 
-	private final DedicatedFile masterFile = new MasterFile((short) 0x0200);
+	private final DedicatedFile _masterFile;
 
 	/**
 	 * @Override
 	 */
 	public static void install(byte[] bArray, short bOffset, byte bLength) {
 		new TB100Like().register(bArray, (short) (bOffset + 1), bArray[bOffset]);
+	}
+
+	public TB100Like() {
+		_masterFile = new MasterFile(Constants.MF_LENGTH);
 	}
 
 	/**
@@ -47,14 +51,15 @@ public class TB100Like extends Applet {
 	 * @param apdu The incoming APDU object
 	 */
 	private void processAppletSelection(APDU apdu) {
-		short headerSize = masterFile.getHeaderSize();
+		short headerSize = _masterFile.getHeaderSize();
 
 		apdu.setOutgoing();
 		apdu.setOutgoingLength(headerSize);
 
-		byte[] mfHeader= new byte[headerSize];
-		masterFile.getHeader(mfHeader, (short) 0);
-		apdu.sendBytesLong(mfHeader, (short) 0, (short) mfHeader.length);
+		byte[] output = new byte[headerSize];
+		_masterFile.getHeader(output, (short) 0);
+
+		apdu.sendBytesLong(output, (short) 0, (short) output.length);
 	}
 
 	/**
@@ -63,7 +68,7 @@ public class TB100Like extends Applet {
 	 * @param apdu The incoming APDU object
 	 */
 	private void processSelect(APDU apdu) {
-		// TODO
+		// TODO Select inner files
 	}
 
 }

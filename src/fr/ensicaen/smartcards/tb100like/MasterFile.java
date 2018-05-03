@@ -19,10 +19,16 @@ public class MasterFile extends DedicatedFile {
 	public MasterFile(short size) {
 		super(null, (short) 0, size, mfHeader);
 
-		_memory = new byte[_size];
+		_memory = new byte[getLength()];
 
+		// The header must be explicitely set because memory is not allocated when
+		// super(...) is called
 		setHeader(mfHeader);
 	}
+
+	//
+	// >> File
+	//
 
 	protected final byte[] getMemory() {
 		return _memory;

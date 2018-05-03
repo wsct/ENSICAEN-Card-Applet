@@ -7,6 +7,7 @@
 <CLASS name="DedicatedFile"/>
 <CLASS name="ElementaryFile"/>
 <CLASS name="MasterFile"/>
+<APPLET aid="F0 54 42 31 30 30 54 45 53 54 00" instanceaid="" parameter="" authority="" privileges="" index="14720" name="TB100Test"/>
 </PKG>
 <Libs/>
 </USER>

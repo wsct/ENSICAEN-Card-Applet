@@ -4,6 +4,8 @@
 
 package fr.ensicaen.smartcards.tb100like;
 
+import java.lang.Override;
+
 import javacard.framework.Util;
 
 /**
@@ -12,24 +14,56 @@ import javacard.framework.Util;
 public class ElementaryFile extends File {
 
 	/**
+	 * @param parentDF Parent DF.
+	 * @param offset   Start byte index of the file in parent DF data zone.
+	 * @param size     Number of used bytes by the DF (body + header).
 	 * @param header   File header.
-	 * @param bodySize Number of usable bytes in the EF (body only, without header).
 	 */
 	public ElementaryFile(DedicatedFile parentDF, short offset, short size, byte[] header) {
 		super(parentDF, offset, size, header);
 	}
 
+	//
+	// >> File
+	//
+
+	/**
+	 *
+	 */
+	public boolean isAvailable(short offset, short length) {
+		// TODO Implement availability check
+		return true;
+	}
+
+	/**
+	 * 
+	 */
+	public final boolean isDF() {
+		return false;
+	}
+
+	/**
+	 * 
+	 */
+	public final boolean isEF() {
+		return true;
+	}
+
+	//
+	// Public Methods
+	//
+
 	/**
 	 * Write bytes to the file.
 	 */
-	public short write(byte[] source, short sourceOffset, short bodyOffset, short length) {
-		return Util.arrayCopy(source, sourceOffset, getMemory(), getInMemoryOffset(bodyOffset), length);
+	public short write(byte[] source, short sourceOffset, short offset, short length) {
+		return Util.arrayCopy(source, sourceOffset, getMemory(), getInMemoryOffset(offset), length);
 	}
 
 	/**
 	 * Read bytes from the file.
 	 */
-	public short read(short bodyOffset, byte[] output, short outputOffset, short length) {
-		return Util.arrayCopy(getMemory(), getInMemoryOffset(bodyOffset), output, outputOffset, length);
+	public short read(short offset, byte[] output, short outputOffset, short length) {
+		return Util.arrayCopy(getMemory(), getInMemoryOffset(offset), output, outputOffset, length);
 	}
 }
