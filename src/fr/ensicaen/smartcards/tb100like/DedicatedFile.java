@@ -21,13 +21,24 @@ public class DedicatedFile extends File {
 	 * @param size     Number of used bytes by the DF (body + header).
 	 * @param header   File header.
 	 */
-	public DedicatedFile(DedicatedFile parentDF, short offset, short size, byte[] header) {
-		super(parentDF, offset, size, header);
+	public DedicatedFile(DedicatedFile parentDF, short offset, short size, byte[] header, short headerOffset,
+			short headerLength) {
+		super(parentDF, offset, size, header, headerOffset, headerLength);
 	}
 
 	//
 	// >> File
 	//
+
+	/**
+	 *
+	 */
+	protected final void clearInternals() {
+		// TODO Delete all children
+		for (byte i = 0; i < _childrenCount; i++) {
+			deleteFile(i);
+		}
+	}
 
 	/**
 	 *
@@ -63,22 +74,53 @@ public class DedicatedFile extends File {
 
 	/**
 	 * Creates a new DF starting at offset and using size bytes.
+	 * 
+	 * @return Index of the new file.
 	 */
-	public byte createDedicatedFile(short offset, short size, byte[] header) {
-		// TODO Check space availability
-		_children[_childrenCount] = new DedicatedFile(this, offset, size, header);
+	public byte createDedicatedFile(short offset, short size, byte[] header, short headerOffset, short headerLength) {
+		if (_childrenCount == MAX_CHILDREN) {
+			return -1;
+		}
+
+		_children[_childrenCount] = new DedicatedFile(this, offset, size, header, headerOffset, headerLength);
 		_childrenCount++;
 		return (byte) (_childrenCount - 1);
 	}
 
 	/**
 	 * Creates a new EF starting at offset and using size bytes.
+	 * 
+	 * @return Index of the new file.
 	 */
-	public byte createElementaryFile(short offset, short size, byte[] header) {
-		// TODO Check space availability
-		_children[_childrenCount] = new ElementaryFile(this, offset, size, header);
+	public byte createElementaryFile(short offset, short size, byte[] header, short headerOffset, short headerLength) {
+		if (_childrenCount == MAX_CHILDREN) {
+			return -1;
+		}
+
+		_children[_childrenCount] = new ElementaryFile(this, offset, size, header, headerOffset, headerLength);
 		_childrenCount++;
 		return (byte) (_childrenCount - 1);
+	}
+
+	/**
+	 * Deletes a file by its index.
+	 * 
+	 * @return false is the file is not found.
+	 */
+	public boolean deleteFile(byte nth) {
+		if (nth <= 0 || nth >= _childrenCount) {
+			return false;
+		}
+
+		_children[nth].clearInternals();
+
+		for (byte i = (byte) (nth + 1); i < _childrenCount; i++) {
+			_children[(byte) (i - 1)] = _children[i];
+		}
+		_childrenCount--;
+		_children[_childrenCount] = null;
+
+		return true;
 	}
 
 	/**
@@ -97,6 +139,6 @@ public class DedicatedFile extends File {
 	 * @param nth Index of the child (starts at 0)
 	 */
 	public boolean hasChild(byte nth) {
-		return nth >= (short) 0 && nth < _childrenCount;
+		return nth >= 0 && nth < _childrenCount;
 	}
 }

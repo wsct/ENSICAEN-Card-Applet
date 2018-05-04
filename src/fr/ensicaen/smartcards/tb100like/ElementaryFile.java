@@ -19,13 +19,21 @@ public class ElementaryFile extends File {
 	 * @param size     Number of used bytes by the DF (body + header).
 	 * @param header   File header.
 	 */
-	public ElementaryFile(DedicatedFile parentDF, short offset, short size, byte[] header) {
-		super(parentDF, offset, size, header);
+	public ElementaryFile(DedicatedFile parentDF, short offset, short size, byte[] header, short headerOffset,
+			short headerLength) {
+		super(parentDF, offset, size, header, headerOffset, headerOffset);
 	}
 
 	//
 	// >> File
 	//
+
+	/**
+	 *
+	 */
+	protected final void clearInternals() {
+		// TODO Clear used space.
+	}
 
 	/**
 	 *

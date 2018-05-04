@@ -26,19 +26,25 @@ public abstract class File {
 	 * @param size     Size used by the file (header+body).
 	 * @param header   File header.
 	 */
-	public File(DedicatedFile parentDF, short offset, short size, byte[] header) {
+	public File(DedicatedFile parentDF, short offset, short size, byte[] header, short headerOffset,
+			short headerLength) {
 		_parentDF = parentDF;
 		_inParentDataOffset = offset;
 		_length = size;
 
 		if (parentDF != null) {
-			setHeader(header);
+			setHeader(header, headerOffset, headerLength);
 		}
 	}
 
 	//
 	// >> Public Methods
 	//
+
+	/**
+	 * Free used space before file deletion.
+	 */
+	protected abstract void clearInternals();
 
 	/**
 	 * 
@@ -107,10 +113,10 @@ public abstract class File {
 	/**
 	 *
 	 */
-	protected final void setHeader(byte[] header) {
-		_headerLength = (short) header.length;
+	protected final void setHeader(byte[] header, short offset, short length) {
+		_headerLength = length;
 
 		short inMemoryOffset = (short) (getInMemoryOffset(_inParentDataOffset) - _headerLength);
-		Util.arrayCopy(header, (short) 0, getMemory(), inMemoryOffset, _headerLength);
+		Util.arrayCopy(header, offset, getMemory(), inMemoryOffset, _headerLength);
 	}
 }

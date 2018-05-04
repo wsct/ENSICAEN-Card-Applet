@@ -17,13 +17,13 @@ public class MasterFile extends DedicatedFile {
 	 * @param size Number of bytes used by the MF.
 	 */
 	public MasterFile(short size) {
-		super(null, (short) 0, size, mfHeader);
+		super(null, (short) 0, size, mfHeader, (short) 0, (short) mfHeader.length);
 
 		_memory = new byte[getLength()];
 
 		// The header must be explicitely set because memory is not allocated when
 		// super(...) is called
-		setHeader(mfHeader);
+		setHeader(mfHeader, (short) 0, (short) mfHeader.length);
 	}
 
 	//
