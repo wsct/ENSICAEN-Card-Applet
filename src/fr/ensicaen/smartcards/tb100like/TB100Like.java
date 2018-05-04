@@ -5,6 +5,8 @@
 package fr.ensicaen.smartcards.tb100like;
 
 import javacard.framework.*;
+import javacard.security.*;
+
 
 /**
  * TB100 like applet
@@ -37,6 +39,11 @@ public class TB100Like extends Applet
 			case ISO7816.INS_SELECT:
 				processSelect(apdu);
 				break;
+				
+			case Constants.INS_GENERATE_RANDOM :
+				processGenerateRandom(apdu);
+				break;
+				
 
 			default:
 				ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
@@ -61,6 +68,32 @@ public class TB100Like extends Applet
 	 */
 	private void processSelect(APDU apdu) {
 		// TODO
+	}
+	
+	/**
+	 * Process GENERATE RANDOM instruction
+	 *
+	 * @param apdu The incoming APDU object
+	 */
+	private void processGenerateRandom(APDU apdu){
+
+		byte[] apduBuffer = apdu.getBuffer();
+		short Le = apdu.setOutgoing();
+		
+		// verify that Le='08'
+		if(Le!=8){
+			// if not => error
+			ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+		}
+		else{
+		// generate 8 random bytes
+			RandomData rndGen = RandomData.getInstance(RandomData.ALG_SECURE_RANDOM);
+			rndGen.generateData(  apduBuffer , (short)0, (short)8 );
+		// and send it !
+			apdu.setOutgoingLength( (short)8 );
+			apdu.sendBytes( (short)0, (short)8 );
+			ISOException.throwIt(ISO7816.SW_NO_ERROR);
+		}
 	}
 
 }
