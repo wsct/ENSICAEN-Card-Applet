@@ -5,7 +5,7 @@
 package fr.ensicaen.smartcards.tb100like;
 
 /**
- * Dedicated File inspired by TB100.
+ * Dedicated File implementation inspired by TB100.
  */
 public class DedicatedFile extends File {
 
@@ -16,14 +16,12 @@ public class DedicatedFile extends File {
 	private byte _childrenCount = 0;
 
 	/**
-	 * @param parentDF Parent DF.
-	 * @param offset   Start byte index of the file in parent DF data zone.
-	 * @param size     Number of used bytes by the DF (body + header).
-	 * @param header   File header.
+	 * Creates a new empty DF.
+	 * 
+	 * @param fileSystem The file system instance this DF belongs.
 	 */
-	public DedicatedFile(DedicatedFile parentDF, short offset, short size, byte[] header, short headerOffset,
-			short headerLength) {
-		super(parentDF, offset, size, header, headerOffset, headerLength);
+	public DedicatedFile(FileSystem fileSystem) {
+		super(fileSystem);
 	}
 
 	//
@@ -31,7 +29,7 @@ public class DedicatedFile extends File {
 	//
 
 	/**
-	 *
+	 * {@inheritDoc}
 	 */
 	protected final void clearInternals() {
 		// TODO Delete all children
@@ -41,7 +39,7 @@ public class DedicatedFile extends File {
 	}
 
 	/**
-	 *
+	 * {@inheritDoc}
 	 */
 	public final boolean isAvailable(short offset, short length) {
 		for (byte i = 0; i < _childrenCount; i++) {
@@ -55,25 +53,31 @@ public class DedicatedFile extends File {
 	}
 
 	/**
-	 *
+	 * {@inheritDoc}
 	 */
 	public final boolean isDF() {
 		return true;
 	}
 
 	/**
-	 *
+	 * {@inheritDoc}
 	 */
 	public final boolean isEF() {
 		return false;
 	}
 
 	//
-	// > Public Methods
+	// >> Public Methods
 	//
 
 	/**
 	 * Creates a new DF starting at offset and using size bytes.
+	 * 
+	 * @param offset       Offset of the start of the file in DF body.
+	 * @param size         Size used by the file (header + body).
+	 * @param header       Buffer containing the header of the file.
+	 * @param headerOffset Offset of the header in previous buffer.
+	 * @param headerLength Length of the header (in bytes).
 	 * 
 	 * @return Index of the new file.
 	 */
@@ -82,13 +86,21 @@ public class DedicatedFile extends File {
 			return -1;
 		}
 
-		_children[_childrenCount] = new DedicatedFile(this, offset, size, header, headerOffset, headerLength);
+		_children[_childrenCount] = _fileSystem.getFreeDF();
+		_children[_childrenCount].setup(this, offset, size, header, headerOffset, headerLength);
 		_childrenCount++;
+
 		return (byte) (_childrenCount - 1);
 	}
 
 	/**
 	 * Creates a new EF starting at offset and using size bytes.
+	 * 
+	 * @param offset       Offset of the start of the file in DF body.
+	 * @param size         Size used by the file (header + body).
+	 * @param header       Buffer containing the header of the file.
+	 * @param headerOffset Offset of the header in previous buffer.
+	 * @param headerLength Length of the header (in bytes).
 	 * 
 	 * @return Index of the new file.
 	 */
@@ -97,13 +109,17 @@ public class DedicatedFile extends File {
 			return -1;
 		}
 
-		_children[_childrenCount] = new ElementaryFile(this, offset, size, header, headerOffset, headerLength);
+		_children[_childrenCount] = _fileSystem.getFreeEF();
+		_children[_childrenCount].setup(this, offset, size, header, headerOffset, headerLength);
 		_childrenCount++;
+
 		return (byte) (_childrenCount - 1);
 	}
 
 	/**
 	 * Deletes a file by its index.
+	 * 
+	 * @param nth index of the file in the DF.
 	 * 
 	 * @return false is the file is not found.
 	 */
@@ -112,7 +128,7 @@ public class DedicatedFile extends File {
 			return false;
 		}
 
-		_children[nth].clearInternals();
+		_children[nth].release();
 
 		for (byte i = (byte) (nth + 1); i < _childrenCount; i++) {
 			_children[(byte) (i - 1)] = _children[i];
@@ -127,6 +143,8 @@ public class DedicatedFile extends File {
 	 * Returns the nth child file. A call to hasChild should be done to verify the
 	 * existence.
 	 * 
+	 * @param nth Index of the file in the DF.
+	 * 
 	 * @param nth Index of the child (starts at 0)
 	 */
 	public File getChild(byte nth) {
@@ -136,7 +154,7 @@ public class DedicatedFile extends File {
 	/**
 	 * Returns true if the nth child file exists.
 	 * 
-	 * @param nth Index of the child (starts at 0)
+	 * @param nth Index of the file in the DF.
 	 */
 	public boolean hasChild(byte nth) {
 		return nth >= 0 && nth < _childrenCount;

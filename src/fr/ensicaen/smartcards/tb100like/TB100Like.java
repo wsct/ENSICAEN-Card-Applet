@@ -14,18 +14,20 @@ public class TB100Like extends Applet {
 	private final DedicatedFile _masterFile;
 
 	/**
-	 * @Override
+	 * {@inheritDoc}
 	 */
 	public static void install(byte[] bArray, short bOffset, byte bLength) {
 		new TB100Like().register(bArray, (short) (bOffset + 1), bArray[bOffset]);
 	}
 
 	public TB100Like() {
-		_masterFile = new MasterFile(Constants.MF_LENGTH);
+		_masterFile = new DedicatedFile(new FileSystem(Constants.FILESYSTEM_SIZE, Constants.DF_MAX, Constants.EF_MAX));
+		_masterFile.setup(null, (short) 0, (short) 0x200, Constants.HEADER_MF, (short) 0,
+				(short) Constants.HEADER_MF.length);
 	}
 
 	/**
-	 * @Override
+	 * {@inheritDoc}
 	 */
 	public void process(APDU apdu) {
 		if (selectingApplet()) {

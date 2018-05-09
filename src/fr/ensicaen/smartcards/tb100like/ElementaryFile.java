@@ -4,24 +4,20 @@
 
 package fr.ensicaen.smartcards.tb100like;
 
-import java.lang.Override;
-
 import javacard.framework.Util;
 
 /**
- * Elementary File inspired by TB100.
+ * Elementary File implementation inspired by TB100.
  */
 public class ElementaryFile extends File {
 
 	/**
-	 * @param parentDF Parent DF.
-	 * @param offset   Start byte index of the file in parent DF data zone.
-	 * @param size     Number of used bytes by the DF (body + header).
-	 * @param header   File header.
+	 * Creates a new empty EF.
+	 * 
+	 * @param fileSystem The file system instance this DF belongs.
 	 */
-	public ElementaryFile(DedicatedFile parentDF, short offset, short size, byte[] header, short headerOffset,
-			short headerLength) {
-		super(parentDF, offset, size, header, headerOffset, headerOffset);
+	public ElementaryFile(FileSystem fileSystem) {
+		super(fileSystem);
 	}
 
 	//
@@ -29,14 +25,14 @@ public class ElementaryFile extends File {
 	//
 
 	/**
-	 *
+	 * {@inheritDoc}
 	 */
 	protected final void clearInternals() {
 		// TODO Clear used space.
 	}
 
 	/**
-	 *
+	 * {@inheritDoc}
 	 */
 	public boolean isAvailable(short offset, short length) {
 		// TODO Implement availability check
@@ -44,14 +40,14 @@ public class ElementaryFile extends File {
 	}
 
 	/**
-	 * 
+	 * {@inheritDoc}
 	 */
 	public final boolean isDF() {
 		return false;
 	}
 
 	/**
-	 * 
+	 * {@inheritDoc}
 	 */
 	public final boolean isEF() {
 		return true;
@@ -63,15 +59,33 @@ public class ElementaryFile extends File {
 
 	/**
 	 * Write bytes to the file.
+	 * 
+	 * @param source       Buffer containing the data to write.
+	 * @param sourceOffset Offset of the data in previous buffer.
+	 * @param offset       Offset in the body where to write the data.
+	 * @param length       Length of the data to write.
+	 * 
+	 * @return offset + length;
 	 */
 	public short write(byte[] source, short sourceOffset, short offset, short length) {
-		return Util.arrayCopy(source, sourceOffset, getMemory(), getInMemoryOffset(offset), length);
+		Util.arrayCopy(source, sourceOffset, _fileSystem.getMemory(), getInMemoryOffset(offset), length);
+
+		return (short) (offset + length);
 	}
 
 	/**
 	 * Read bytes from the file.
+	 * 
+	 * @param offset       Offset in the body where to start the reading.
+	 * @param output       Output buffer.
+	 * @param outputOffset Offset in the output buffer where to write the data.
+	 * @param length       Length of the data to read.
+	 * 
+	 * @return offset + length;
 	 */
 	public short read(short offset, byte[] output, short outputOffset, short length) {
-		return Util.arrayCopy(getMemory(), getInMemoryOffset(offset), output, outputOffset, length);
+		Util.arrayCopy(_fileSystem.getMemory(), getInMemoryOffset(offset), output, outputOffset, length);
+
+		return (short) (offset + length);
 	}
 }

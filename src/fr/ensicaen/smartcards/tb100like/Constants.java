@@ -16,5 +16,9 @@ public final class Constants {
 
 	public static final byte[] FCI_MF = new byte[] { (byte) 0x3F, (byte) 0x00, (byte) 0x20, (byte) 0x18 };
 
-	public static final short MF_LENGTH = (short) 0x0800;
+	public static final byte[] HEADER_MF = new byte[] { (byte) 0x3F, (byte) 0x00, (byte) 0x20, (byte) 0x18 };
+
+	public static final short FILESYSTEM_SIZE = (short) 0x0800;
+	public static final byte DF_MAX = (byte) 0x08;
+	public static final byte EF_MAX = (byte) 0x10;
 }

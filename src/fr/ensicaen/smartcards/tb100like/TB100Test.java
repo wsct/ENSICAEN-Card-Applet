@@ -12,15 +12,21 @@ public class TB100Test extends Applet {
 	final static byte INS_WRITE_EF = (byte) 0x20;
 	final static byte INS_READ_EF = (byte) 0x21;
 
-	private final DedicatedFile masterFile = new MasterFile((short) 0x0200);
+	private final DedicatedFile masterFile;
 
 	public TB100Test() {
+		// MF initialization
+		FileSystem fileSystem = new FileSystem((short) 0x0200, (byte) 0x08, (byte) 0x08);
+		masterFile = fileSystem.getFreeDF();
+		masterFile.setup(null, (short) 0, (short) 0x200, Constants.HEADER_MF, (short) 0,
+				(short) Constants.HEADER_MF.length);
+
 		byte dfIndex = masterFile.createDedicatedFile((short) 0x20, (short) 0x80,
 				new byte[] { (byte) 0x6F, (byte) 0x00 }, (short) 0, (short) 2);
 		File file = masterFile.getChild(dfIndex);
 		if (file.isDF()) {
 			byte efIndex = ((DedicatedFile) file).createElementaryFile((short) 0x04, (short) 0x04,
-					new byte[] { (byte) 0x7F, (byte) 0x01 }, (short) 0, (short) 4);
+					new byte[] { (byte) 0x7F, (byte) 0x01 }, (short) 0, (short) 2);
 			File subFile = ((DedicatedFile) file).getChild(efIndex);
 			if (subFile.isEF()) {
 				((ElementaryFile) subFile).write(new byte[] { (byte) 'H', (byte) 'I', (byte) '!', (byte) '!' },
@@ -29,10 +35,16 @@ public class TB100Test extends Applet {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public static void install(byte[] bArray, short bOffset, byte bLength) {
 		new TB100Test().register(bArray, (short) (bOffset + 1), bArray[bOffset]);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void process(APDU apdu) {
 		if (selectingApplet()) {
 			processAppletSelection(apdu);
