@@ -81,17 +81,21 @@ public class DedicatedFile extends File {
 	 * 
 	 * @return Index of the new file.
 	 */
-	public final byte createDedicatedFile(short offset, short size, byte[] header, short headerOffset,
+	public final DedicatedFile createDedicatedFile(short offset, short size, byte[] header, short headerOffset,
 			short headerLength) {
 		if (_childrenCount == MAX_CHILDREN) {
-			return -1;
+			return null;
 		}
 
-		_children[_childrenCount] = _fileSystem.getFreeDF();
-		_children[_childrenCount].setup(this, offset, size, header, headerOffset, headerLength);
-		_childrenCount++;
+		DedicatedFile file = _fileSystem.getFreeDF();
+		if (file != null) {
+			file.setup(this, offset, size, header, headerOffset, headerLength);
 
-		return (byte) (_childrenCount - 1);
+			_children[_childrenCount] = file;
+			_childrenCount++;
+		}
+
+		return file;
 	}
 
 	/**
@@ -105,34 +109,45 @@ public class DedicatedFile extends File {
 	 * 
 	 * @return Index of the new file.
 	 */
-	public final byte createElementaryFile(short offset, short size, byte[] header, short headerOffset,
+	public final ElementaryFile createElementaryFile(short offset, short size, byte[] header, short headerOffset,
 			short headerLength) {
 		if (_childrenCount == MAX_CHILDREN) {
-			return -1;
+			return null;
 		}
 
-		_children[_childrenCount] = _fileSystem.getFreeEF();
-		_children[_childrenCount].setup(this, offset, size, header, headerOffset, headerLength);
-		_childrenCount++;
+		ElementaryFile file = _fileSystem.getFreeEF();
+		if (file != null) {
+			file.setup(this, offset, size, header, headerOffset, headerLength);
 
-		return (byte) (_childrenCount - 1);
+			_children[_childrenCount] = file;
+			_childrenCount++;
+		}
+
+		return file;
 	}
 
 	/**
-	 * Deletes a file by its index.
+	 * Deletes a file by its FID.
 	 * 
-	 * @param nth index of the file in the DF.
+	 * @param fid FID of the file.
 	 * 
 	 * @return false is the file is not found.
 	 */
-	public final boolean deleteFile(byte nth) {
-		if (nth <= 0 || nth >= _childrenCount) {
+	public final boolean deleteFile(short fid) {
+		File file = findFileByFileId(fid);
+		if (file == null) {
 			return false;
 		}
 
-		_children[nth].release();
+		file.release();
 
-		for (byte i = (byte) (nth + 1); i < _childrenCount; i++) {
+		// Update the children
+		byte fileIndex = 0;
+		while (fileIndex < _childrenCount && _children[fileIndex] != file) {
+			fileIndex++;
+		}
+
+		for (byte i = (byte) (fileIndex + 1); i < _childrenCount; i++) {
 			_children[(byte) (i - 1)] = _children[i];
 		}
 		_childrenCount--;

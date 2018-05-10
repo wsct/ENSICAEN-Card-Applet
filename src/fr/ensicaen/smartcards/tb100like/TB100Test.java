@@ -22,18 +22,11 @@ public class TB100Test extends Applet {
 		masterFile.setup(null, (short) 0, (short) 0x200, Constants.HEADER_MF, (short) 0,
 				(short) Constants.HEADER_MF.length);
 
-		byte dfIndex = masterFile.createDedicatedFile((short) 0x20, (short) 0x80,
+		DedicatedFile df = masterFile.createDedicatedFile((short) 0x20, (short) 0x80,
 				new byte[] { (byte) 0x6F, (byte) 0x00 }, (short) 0, (short) 2);
-		File file = masterFile.getChild(dfIndex);
-		if (file.isDF()) {
-			byte efIndex = ((DedicatedFile) file).createElementaryFile((short) 0x04, (short) 0x04,
-					new byte[] { (byte) 0x7F, (byte) 0x01 }, (short) 0, (short) 2);
-			File subFile = ((DedicatedFile) file).getChild(efIndex);
-			if (subFile.isEF()) {
-				((ElementaryFile) subFile).write(new byte[] { (byte) 'H', (byte) 'I', (byte) '!', (byte) '!' },
-						(short) 0, (short) 0, (short) 4);
-			}
-		}
+		ElementaryFile ef = df.createElementaryFile((short) 0x04, (short) 0x04, new byte[] { (byte) 0x7F, (byte) 0x01 },
+				(short) 0, (short) 2);
+		ef.write(new byte[] { (byte) 'H', (byte) 'I', (byte) '!', (byte) '!' }, (short) 0, (short) 0, (short) 4);
 	}
 
 	/**
@@ -122,14 +115,10 @@ public class TB100Test extends Applet {
 		short offset = Util.getShort(buffer, udcOffset);
 		short size = Util.getShort(buffer, (short) (udcOffset + 2));
 
-		byte[] output = new byte[1];
-
-		apdu.setOutgoing();
-		apdu.setOutgoingLength((short) output.length);
-
-		output[0] = masterFile.createDedicatedFile(offset, size, buffer, (short) (udcOffset + 4), (short) (lc - 4));
-
-		apdu.sendBytesLong(output, (short) 0, (short) output.length);
+		File file = masterFile.createDedicatedFile(offset, size, buffer, (short) (udcOffset + 4), (short) (lc - 4));
+		if (file == null) {
+			ISOException.throwIt(ISO7816.SW_FILE_FULL);
+		}
 	}
 
 	/**
@@ -150,18 +139,10 @@ public class TB100Test extends Applet {
 		short offset = Util.getShort(buffer, udcOffset);
 		short size = Util.getShort(buffer, (short) (udcOffset + 2));
 
-		byte[] output = new byte[1];
-
-		apdu.setOutgoing();
-		apdu.setOutgoingLength((short) output.length);
-
-		output[0] = masterFile.createElementaryFile(offset, size, buffer, (short) (udcOffset + 4), (short) (lc - 4));
-
-		if (output[0] == -1) {
+		File file = masterFile.createElementaryFile(offset, size, buffer, (short) (udcOffset + 4), (short) (lc - 4));
+		if (file == null) {
 			ISOException.throwIt(ISO7816.SW_FILE_FULL);
 		}
-
-		apdu.sendBytesLong(output, (short) 0, (short) output.length);
 	}
 
 	/**
@@ -175,8 +156,8 @@ public class TB100Test extends Applet {
 		byte[] buffer = apdu.getBuffer();
 		short bufferLength = apdu.setIncomingAndReceive();
 
-		if (!masterFile.deleteFile(buffer[ISO7816.OFFSET_CDATA])) {
-			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+		if (!masterFile.deleteFile(Util.getShort(buffer, ISO7816.OFFSET_CDATA))) {
+			ISOException.throwIt(ISO7816.SW_FILE_NOT_FOUND);
 		}
 	}
 

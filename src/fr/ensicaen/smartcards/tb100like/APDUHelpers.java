@@ -20,7 +20,7 @@ public class APDUHelpers {
 		if ((buffer[ISO7816.OFFSET_LC] & (byte) 0x80) == (byte) 0x00) {
 			return Util.makeShort((byte) 0x00, buffer[ISO7816.OFFSET_LC]);
 		} else {
-			return Util.makeShort(buffer[(byte) (ISO7816.OFFSET_LC + 1)], buffer[(byte) (ISO7816.OFFSET_LC + 2)]);
+			return Util.getShort(buffer, (byte) (ISO7816.OFFSET_LC + 1));
 		}
 	}
 
@@ -32,6 +32,10 @@ public class APDUHelpers {
 	public static short getOffsetCdata(APDU apdu) {
 		byte[] buffer = apdu.getBuffer();
 
-		return (buffer[ISO7816.OFFSET_LC] < (byte) 0x80) ? ISO7816.OFFSET_CDATA : ISO7816.OFFSET_CDATA + 2;
+		if ((buffer[ISO7816.OFFSET_LC] & (byte) 0x80) == (byte) 0x00) {
+			return ISO7816.OFFSET_CDATA;
+		} else {
+			return ISO7816.OFFSET_CDATA + 2;
+		}
 	}
 }
