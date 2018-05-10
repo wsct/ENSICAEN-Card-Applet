@@ -81,7 +81,8 @@ public class DedicatedFile extends File {
 	 * 
 	 * @return Index of the new file.
 	 */
-	public byte createDedicatedFile(short offset, short size, byte[] header, short headerOffset, short headerLength) {
+	public final byte createDedicatedFile(short offset, short size, byte[] header, short headerOffset,
+			short headerLength) {
 		if (_childrenCount == MAX_CHILDREN) {
 			return -1;
 		}
@@ -104,7 +105,8 @@ public class DedicatedFile extends File {
 	 * 
 	 * @return Index of the new file.
 	 */
-	public byte createElementaryFile(short offset, short size, byte[] header, short headerOffset, short headerLength) {
+	public final byte createElementaryFile(short offset, short size, byte[] header, short headerOffset,
+			short headerLength) {
 		if (_childrenCount == MAX_CHILDREN) {
 			return -1;
 		}
@@ -123,7 +125,7 @@ public class DedicatedFile extends File {
 	 * 
 	 * @return false is the file is not found.
 	 */
-	public boolean deleteFile(byte nth) {
+	public final boolean deleteFile(byte nth) {
 		if (nth <= 0 || nth >= _childrenCount) {
 			return false;
 		}
@@ -140,6 +142,23 @@ public class DedicatedFile extends File {
 	}
 
 	/**
+	 * Find the file in DF having a given file identifier.
+	 * 
+	 * @return null if not found or the found {@link File} instance.
+	 */
+	public final File findFileByFileId(short fid) {
+		byte index = 0;
+		while (index < _childrenCount) {
+			if (_children[index].getFileId() == fid) {
+				return _children[index];
+			}
+			index++;
+		}
+
+		return null;
+	}
+
+	/**
 	 * Returns the nth child file. A call to hasChild should be done to verify the
 	 * existence.
 	 * 
@@ -147,7 +166,7 @@ public class DedicatedFile extends File {
 	 * 
 	 * @param nth Index of the child (starts at 0)
 	 */
-	public File getChild(byte nth) {
+	public final File getChild(byte nth) {
 		return _children[nth];
 	}
 
@@ -156,7 +175,7 @@ public class DedicatedFile extends File {
 	 * 
 	 * @param nth Index of the file in the DF.
 	 */
-	public boolean hasChild(byte nth) {
+	public final boolean hasChild(byte nth) {
 		return nth >= 0 && nth < _childrenCount;
 	}
 }

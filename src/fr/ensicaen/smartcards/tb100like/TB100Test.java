@@ -11,6 +11,7 @@ public class TB100Test extends Applet {
 	final static byte INS_DELETE_FILE = (byte) 0xDF;
 	final static byte INS_WRITE_EF = (byte) 0x20;
 	final static byte INS_READ_EF = (byte) 0x21;
+	final static byte INS_FIND_BY_FID = (byte) 0x22;
 
 	private final DedicatedFile masterFile;
 
@@ -73,6 +74,9 @@ public class TB100Test extends Applet {
 				break;
 			case INS_DELETE_FILE:
 				processDeleteFile(apdu);
+				break;
+			case INS_FIND_BY_FID:
+				processFindByFid(apdu);
 				break;
 			default:
 				ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
@@ -174,5 +178,25 @@ public class TB100Test extends Applet {
 		if (!masterFile.deleteFile(buffer[ISO7816.OFFSET_CDATA])) {
 			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
 		}
+	}
+
+	/**
+	 * Finds a file by its FID.
+	 * 
+	 * C-APDU: 80 22 00 00 02 <FID>
+	 * 
+	 * <FID>: 2 bytes
+	 */
+	private void processFindByFid(APDU apdu) {
+		byte[] buffer = apdu.getBuffer();
+		short bufferLength = apdu.setIncomingAndReceive();
+
+		File file = masterFile.findFileByFileId(Util.getShort(buffer, ISO7816.OFFSET_CDATA));
+		if (file == null) {
+			ISOException.throwIt(ISO7816.SW_FILE_NOT_FOUND);
+		}
+
+		file.getHeader(buffer, (short) 0);
+		apdu.setOutgoingAndSend((short) 0, file.getHeaderSize());
 	}
 }

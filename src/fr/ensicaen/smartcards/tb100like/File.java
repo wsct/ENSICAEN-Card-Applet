@@ -40,10 +40,13 @@ public abstract class File {
 	//
 
 	/**
-	 * @return Offset the file in memory (start of header).
+	 * Reads the first 2 bytes of the header of the file.
+	 * 
+	 * @return FID of the file.
 	 */
-	public final short getOffset() {
-		return _inParentBodyOffset;
+	public final short getFileId() {
+		short inMemoryOffset = getInMemoryOffset((short) (-_headerLength));
+		return Util.getShort(_fileSystem.getMemory(), inMemoryOffset);
 	}
 
 	/**
@@ -51,6 +54,13 @@ public abstract class File {
 	 */
 	public final short getLength() {
 		return _length;
+	}
+
+	/**
+	 * @return Offset the file in memory (start of header).
+	 */
+	public final short getOffset() {
+		return _inParentBodyOffset;
 	}
 
 	/**
@@ -76,7 +86,7 @@ public abstract class File {
 	 * @param offset Offset in previous buffer where to write the header.
 	 */
 	public final void getHeader(byte[] output, short offset) {
-		short inMemoryOffset = (short) (getInMemoryOffset(_inParentBodyOffset) - _headerLength);
+		short inMemoryOffset = getInMemoryOffset((short) (-_headerLength));
 		Util.arrayCopyNonAtomic(_fileSystem.getMemory(), inMemoryOffset, output, offset, _headerLength);
 	}
 
@@ -116,7 +126,7 @@ public abstract class File {
 		_headerLength = headerLength;
 
 		// Write the header
-		short inMemoryOffset = (short) (getInMemoryOffset(_inParentBodyOffset) - _headerLength);
+		short inMemoryOffset = getInMemoryOffset((short) (-_headerLength));
 		Util.arrayCopy(header, headerOffset, _fileSystem.getMemory(), inMemoryOffset, _headerLength);
 	}
 
@@ -135,7 +145,13 @@ public abstract class File {
 	 * @param dataOffset Offset in file body.
 	 */
 	protected final short getInMemoryOffset(short dataOffset) {
-		return _parentDF == null ? (short) (_headerLength + dataOffset)
-				: _parentDF.getInMemoryOffset((short) (_inParentBodyOffset + _headerLength + dataOffset));
+		File ancestor = _parentDF;
+		short offset = (short) (_inParentBodyOffset + _headerLength + dataOffset);
+		while (ancestor != null) {
+			offset += (short) (ancestor._inParentBodyOffset + ancestor._headerLength);
+			ancestor = ancestor._parentDF;
+		}
+
+		return offset;
 	}
 }
