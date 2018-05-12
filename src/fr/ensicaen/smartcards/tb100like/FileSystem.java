@@ -15,12 +15,16 @@ public class FileSystem {
 	private byte _efMax;
 	private final ElementaryFile[] _elementaryFiles;
 	private final DedicatedFile[] _dedicatedFiles;
+
+	/**
+	 * Raw data storage.
+	 */
 	private final byte[] _memory;
 
 	/**
 	 * Creates a new virtual file system in memory.
 	 * 
-	 * @param size  Size of the dedicated memory (in bytes).
+	 * @param size  Size of the dedicated memory (in words).
 	 * @param dfMax Max number of DF this instance can handle.
 	 * @param efMax Max number of EF this instance can handle.
 	 */
@@ -29,7 +33,7 @@ public class FileSystem {
 		_efMax = efMax;
 
 		// Allocation of data memory
-		_memory = new byte[size];
+		_memory = new byte[(short) (size << 2)];
 
 		// Allocation of DF files structures
 		_dedicatedFiles = new DedicatedFile[_dfMax];

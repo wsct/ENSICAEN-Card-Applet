@@ -111,16 +111,17 @@ public abstract class File {
 	 * Sets up the file for use.
 	 * 
 	 * @param parentDF     Parent DF.
-	 * @param offset       Offset of the file in parent DF body.
-	 * @param size         Size used by the file.
-	 * @param header       Buffer containing the header of the file.
-	 * @param headerOffset Offset of the header in previous buffer.
-	 * @param headerLength Length of the header.
+	 * @param offset       Offset of the file in parent DF body (WORDS).
+	 * @param size         Size used by the file (WORDS).
+	 * @param header       Buffer containing the header of the file (header should
+	 *                     be 32 bits aligned).
+	 * @param headerOffset Offset of the header in previous buffer (BYTES).
+	 * @param headerLength Length of the header (BYTES, should be a multiple of 4).
 	 */
 	public final void setup(DedicatedFile parentDF, short offset, short size, byte[] header, short headerOffset,
 			short headerLength) {
 		_parentDF = parentDF;
-		_inParentBodyOffset = offset;
+		_inParentBodyOffset = (short) (offset << 2);
 		_length = size;
 		_headerLength = headerLength;
 

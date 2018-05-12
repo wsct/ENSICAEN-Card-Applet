@@ -72,11 +72,11 @@ public class DedicatedFile extends File {
 	/**
 	 * Creates a new DF starting at offset and using size bytes.
 	 * 
-	 * @param offset       Offset of the start of the file in DF body.
-	 * @param size         Size used by the file (header + body).
+	 * @param offset       Offset of the start of the file in DF body (WORDS).
+	 * @param size         Size used by the file (header + body) (WORDS).
 	 * @param header       Buffer containing the header of the file.
-	 * @param headerOffset Offset of the header in previous buffer.
-	 * @param headerLength Length of the header (in bytes).
+	 * @param headerOffset Offset of the header in previous buffer (BYTES).
+	 * @param headerLength Length of the header (BYTES).
 	 * 
 	 * @return Index of the new file.
 	 */
@@ -100,11 +100,11 @@ public class DedicatedFile extends File {
 	/**
 	 * Creates a new EF starting at offset and using size bytes.
 	 * 
-	 * @param offset       Offset of the start of the file in DF body.
-	 * @param size         Size used by the file (header + body).
+	 * @param offset       Offset of the start of the file in DF body (WORDS).
+	 * @param size         Size used by the file (header + body) (WORDS).
 	 * @param header       Buffer containing the header of the file.
-	 * @param headerOffset Offset of the header in previous buffer.
-	 * @param headerLength Length of the header (in bytes).
+	 * @param headerOffset Offset of the header in previous buffer (BYTES).
+	 * @param headerLength Length of the header (BYTES).
 	 * 
 	 * @return Index of the new file.
 	 */
