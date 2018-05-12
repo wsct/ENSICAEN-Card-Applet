@@ -32,7 +32,6 @@ public class DedicatedFile extends File {
 	 * {@inheritDoc}
 	 */
 	protected final void clearInternals() {
-		// TODO Delete all children
 		for (byte i = 0; i < _childrenCount; i++) {
 			deleteFile(i);
 		}

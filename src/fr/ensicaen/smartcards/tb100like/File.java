@@ -86,8 +86,7 @@ public abstract class File {
 	 * @param offset Offset in previous buffer where to write the header.
 	 */
 	public final void getHeader(byte[] output, short offset) {
-		short inMemoryOffset = getInMemoryOffset((short) (-_headerLength));
-		Util.arrayCopyNonAtomic(_fileSystem.getMemory(), inMemoryOffset, output, offset, _headerLength);
+		_fileSystem.read(getInMemoryOffset((short) (-_headerLength)), output, offset, _headerLength);
 	}
 
 	/**
@@ -126,8 +125,7 @@ public abstract class File {
 		_headerLength = headerLength;
 
 		// Write the header
-		short inMemoryOffset = getInMemoryOffset((short) (-_headerLength));
-		Util.arrayCopy(header, headerOffset, _fileSystem.getMemory(), inMemoryOffset, _headerLength);
+		_fileSystem.write(header, headerOffset, getInMemoryOffset((short) (-_headerLength)), _headerLength);
 	}
 
 	//

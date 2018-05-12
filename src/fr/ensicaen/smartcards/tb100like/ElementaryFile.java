@@ -4,8 +4,6 @@
 
 package fr.ensicaen.smartcards.tb100like;
 
-import javacard.framework.Util;
-
 /**
  * Elementary File implementation inspired by TB100.
  */
@@ -68,7 +66,7 @@ public class ElementaryFile extends File {
 	 * @return offset + length;
 	 */
 	public short write(byte[] source, short sourceOffset, short offset, short length) {
-		Util.arrayCopy(source, sourceOffset, _fileSystem.getMemory(), getInMemoryOffset(offset), length);
+		_fileSystem.write(source, sourceOffset, getInMemoryOffset(offset), length);
 
 		return (short) (offset + length);
 	}
@@ -84,7 +82,7 @@ public class ElementaryFile extends File {
 	 * @return offset + length;
 	 */
 	public short read(short offset, byte[] output, short outputOffset, short length) {
-		Util.arrayCopy(_fileSystem.getMemory(), getInMemoryOffset(offset), output, outputOffset, length);
+		_fileSystem.read(getInMemoryOffset(offset), output, outputOffset, length);
 
 		return (short) (offset + length);
 	}
