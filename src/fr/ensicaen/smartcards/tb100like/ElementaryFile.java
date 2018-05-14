@@ -33,8 +33,7 @@ public class ElementaryFile extends File {
 	 * {@inheritDoc}
 	 */
 	public boolean isAvailable(short offset, short length) {
-		// TODO Implement availability check
-		return true;
+		return _fileSystem.getFreeLength((short) (offset << 2), (short) (length << 2)) == (short) (length << 2);
 	}
 
 	/**
@@ -56,19 +55,17 @@ public class ElementaryFile extends File {
 	//
 
 	/**
-	 * Writes a sequence of words to the file.
+	 * Erases {@code length} words of data starting from {@code offset}.
 	 * 
-	 * @param source       Buffer containing the data to write.
-	 * @param sourceOffset Offset of the data in previous buffer (BYTES).
-	 * @param offset       Offset in the body where to write the data (WORDS).
-	 * @param length       Length of the data to write (WORDS).
+	 * @param offset Offset of the first word of data to erase (WORDS).
+	 * @param length Number of words to erase (WORDS).
 	 * 
-	 * @return offset + length;
+	 * @return offset + length
 	 */
-	public short write(byte[] source, short sourceOffset, short offset, short length) {
-		_fileSystem.write(source, sourceOffset, getInMemoryOffset(offset), (short) (length * 4));
+	public short erase(short offset, short length) {
+		_fileSystem.erase((short) (offset << 2), (short) (length << 2));
 
-		return (short) (offset + length * 4);
+		return (short) (offset + length);
 	}
 
 	/**
@@ -83,8 +80,24 @@ public class ElementaryFile extends File {
 	 * @return offset + length;
 	 */
 	public short read(short offset, byte[] output, short outputOffset, short length) {
-		_fileSystem.read(getInMemoryOffset((short) (offset << 2)), output, outputOffset, (short) (length * 4));
+		_fileSystem.read(getInMemoryOffset((short) (offset << 2)), output, outputOffset, (short) (length << 2));
 
-		return (short) (offset + length * 4);
+		return (short) (offset + length);
+	}
+
+	/**
+	 * Writes a sequence of words to the file.
+	 * 
+	 * @param source       Buffer containing the data to write.
+	 * @param sourceOffset Offset of the data in previous buffer (BYTES).
+	 * @param offset       Offset in the body where to write the data (WORDS).
+	 * @param length       Length of the data to write (WORDS).
+	 * 
+	 * @return offset + length;
+	 */
+	public short write(byte[] source, short sourceOffset, short offset, short length) {
+		_fileSystem.write(source, sourceOffset, getInMemoryOffset(offset), (short) (length << 2));
+
+		return (short) (offset + length);
 	}
 }
