@@ -26,14 +26,13 @@ public class TB100Test extends Applet {
 		// MF initialization
 		FileSystem fileSystem = new FileSystem(FS_SIZE, FS_DF_MAX, FS_EF_MAX);
 		masterFile = fileSystem.getFreeDF();
-		masterFile.setup(null, (short) 0, FS_SIZE, Constants.HEADER_MF, (short) 0,
-				(short) (Constants.HEADER_MF.length >> 2));
+		masterFile.setup(null, (short) 0, FS_SIZE, Constants.HEADER_MF, (short) 0, (short) Constants.HEADER_MF.length);
 
 		DedicatedFile df = masterFile.createDedicatedFile((short) 0x04, (short) 0x20,
 				new byte[] { (byte) 0x6F, (byte) 0x00, (byte) 0x0A, (byte) 0x0B }, (short) 0, (short) 4);
 		ElementaryFile ef = df.createElementaryFile((short) 0x02, (short) 0x04,
 				new byte[] { (byte) 0x7F, (byte) 0x01, (byte) 0x02, (byte) 0x03 }, (short) 0, (short) 4);
-		ef.write(new byte[] { (byte) 'H', (byte) 'I', (byte) '!', (byte) '!' }, (short) 0, (short) 0, (short) 4);
+		ef.write(new byte[] { (byte) 'H', (byte) 'I', (byte) '!', (byte) '!' }, (short) 0, (short) 0, (short) 1);
 	}
 
 	/**

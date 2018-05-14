@@ -104,6 +104,10 @@ public abstract class File {
 	public final void release() {
 		clearInternals();
 
+		// Erase all memory related reserved by the file (header + body)
+		_fileSystem.erase(getInMemoryOffset((short) -_headerLength), _length);
+
+		_headerLength = 0;
 		_length = 0;
 	}
 

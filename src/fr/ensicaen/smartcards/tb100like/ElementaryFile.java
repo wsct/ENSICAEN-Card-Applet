@@ -61,14 +61,14 @@ public class ElementaryFile extends File {
 	 * @param source       Buffer containing the data to write.
 	 * @param sourceOffset Offset of the data in previous buffer (BYTES).
 	 * @param offset       Offset in the body where to write the data (WORDS).
-	 * @param length       Length of the data to write (BYTES).
+	 * @param length       Length of the data to write (WORDS).
 	 * 
 	 * @return offset + length;
 	 */
 	public short write(byte[] source, short sourceOffset, short offset, short length) {
-		_fileSystem.write(source, sourceOffset, getInMemoryOffset(offset), length);
+		_fileSystem.write(source, sourceOffset, getInMemoryOffset(offset), (short) (length * 4));
 
-		return (short) (offset + length);
+		return (short) (offset + length * 4);
 	}
 
 	/**
@@ -78,13 +78,13 @@ public class ElementaryFile extends File {
 	 * @param output       Output buffer.
 	 * @param outputOffset Offset in the output buffer where to write the data
 	 *                     (BYTES).
-	 * @param length       Length of the data to read (BYTES).
+	 * @param length       Length of the data to read (WORDS).
 	 * 
 	 * @return offset + length;
 	 */
 	public short read(short offset, byte[] output, short outputOffset, short length) {
-		_fileSystem.read(getInMemoryOffset((short) (offset << 2)), output, outputOffset, length);
+		_fileSystem.read(getInMemoryOffset((short) (offset << 2)), output, outputOffset, (short) (length * 4));
 
-		return (short) (offset + length);
+		return (short) (offset + length * 4);
 	}
 }
