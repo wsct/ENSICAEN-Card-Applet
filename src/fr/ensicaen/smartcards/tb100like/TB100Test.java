@@ -4,8 +4,10 @@ import javacard.framework.*;
 
 public class TB100Test extends Applet {
 
+	// Known CLA bytes
 	final static byte CLA_ISO7816 = (byte) 0x00;
 	final static byte CLA_PROPRIETARY = (byte) 0x80;
+	// Known INS bytes
 	final static byte INS_CREATE_DF = (byte) 0xCD;
 	final static byte INS_CREATE_EF = (byte) 0xCE;
 	final static byte INS_DELETE_FILE = (byte) 0xDF;
@@ -13,20 +15,24 @@ public class TB100Test extends Applet {
 	final static byte INS_READ_EF = (byte) 0x21;
 	final static byte INS_FIND_BY_FID = (byte) 0x22;
 
+	// File System parameters
+	final static short FS_SIZE = (short) 0x0100;
+	final static byte FS_DF_MAX = (byte) 0x08;
+	final static byte FS_EF_MAX = (byte) 0x08;
+
 	private final DedicatedFile masterFile;
 
 	public TB100Test() {
 		// MF initialization
-		FileSystem fileSystem = new FileSystem((short) 0x0200, (byte) 0x08, (byte) 0x08);
+		FileSystem fileSystem = new FileSystem(FS_SIZE, FS_DF_MAX, FS_EF_MAX);
 		masterFile = fileSystem.getFreeDF();
-		masterFile.setup(null, (short) 0, (short) 0x200, Constants.HEADER_MF, (short) 0,
-				(short) Constants.HEADER_MF.length);
+		masterFile.setup(null, (short) 0, FS_SIZE, Constants.HEADER_MF, (short) 0, (short) Constants.HEADER_MF.length);
 
-		DedicatedFile df = masterFile.createDedicatedFile((short) 0x20, (short) 0x80,
-				new byte[] { (byte) 0x6F, (byte) 0x00 }, (short) 0, (short) 2);
-		ElementaryFile ef = df.createElementaryFile((short) 0x04, (short) 0x04, new byte[] { (byte) 0x7F, (byte) 0x01 },
-				(short) 0, (short) 2);
-		ef.write(new byte[] { (byte) 'H', (byte) 'I', (byte) '!', (byte) '!' }, (short) 0, (short) 0, (short) 4);
+		DedicatedFile df = masterFile.createDedicatedFile((short) 0x04, (short) 0x20,
+				new byte[] { (byte) 0x6F, (byte) 0x00, (byte) 0x0A, (byte) 0x0B }, (short) 0, (short) 4);
+		ElementaryFile ef = df.createElementaryFile((short) 0x02, (short) 0x04,
+				new byte[] { (byte) 0x7F, (byte) 0x01, (byte) 0x02, (byte) 0x03 }, (short) 0, (short) 4);
+		ef.write(new byte[] { (byte) 'H', (byte) 'I', (byte) '!', (byte) '!' }, (short) 0, (short) 0, (short) 1);
 	}
 
 	/**
@@ -90,9 +96,9 @@ public class TB100Test extends Applet {
 
 		byte[] output = new byte[headerSize];
 
-		DedicatedFile df = (DedicatedFile) masterFile.getChild((byte) 0);
-		ElementaryFile ef = (ElementaryFile) df.getChild((byte) 0);
-		ef.read((short) 0, output, (short) 0, (short) 4);
+		DedicatedFile df = (DedicatedFile) masterFile.findFileByFileId((short) 0x6F00);
+		ElementaryFile ef = (ElementaryFile) df.findFileByFileId((short) 0x7F01);
+		ef.read((short) 0, output, (short) 0, (short) 1);
 
 		apdu.sendBytesLong(output, (short) 0, (short) output.length);
 	}

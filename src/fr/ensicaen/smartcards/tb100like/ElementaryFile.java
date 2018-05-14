@@ -4,8 +4,6 @@
 
 package fr.ensicaen.smartcards.tb100like;
 
-import javacard.framework.Util;
-
 /**
  * Elementary File implementation inspired by TB100.
  */
@@ -35,8 +33,7 @@ public class ElementaryFile extends File {
 	 * {@inheritDoc}
 	 */
 	public boolean isAvailable(short offset, short length) {
-		// TODO Implement availability check
-		return true;
+		return _fileSystem.getFreeLength((short) (offset << 2), (short) (length << 2)) == (short) (length << 2);
 	}
 
 	/**
@@ -58,33 +55,48 @@ public class ElementaryFile extends File {
 	//
 
 	/**
-	 * Write bytes to the file.
+	 * Erases {@code length} words of data starting from {@code offset}.
 	 * 
-	 * @param source       Buffer containing the data to write.
-	 * @param sourceOffset Offset of the data in previous buffer.
-	 * @param offset       Offset in the body where to write the data.
-	 * @param length       Length of the data to write.
+	 * @param offset Offset of the first word of data to erase (WORDS).
+	 * @param length Number of words to erase (WORDS).
 	 * 
-	 * @return offset + length;
+	 * @return offset + length
 	 */
-	public short write(byte[] source, short sourceOffset, short offset, short length) {
-		Util.arrayCopy(source, sourceOffset, _fileSystem.getMemory(), getInMemoryOffset(offset), length);
+	public short erase(short offset, short length) {
+		_fileSystem.erase((short) (offset << 2), (short) (length << 2));
 
 		return (short) (offset + length);
 	}
 
 	/**
-	 * Read bytes from the file.
+	 * Reads a sequence of words from the file.
 	 * 
-	 * @param offset       Offset in the body where to start the reading.
+	 * @param offset       Offset in the body where to start the reading (WORD).
 	 * @param output       Output buffer.
-	 * @param outputOffset Offset in the output buffer where to write the data.
-	 * @param length       Length of the data to read.
+	 * @param outputOffset Offset in the output buffer where to write the data
+	 *                     (BYTES).
+	 * @param length       Length of the data to read (WORDS).
 	 * 
 	 * @return offset + length;
 	 */
 	public short read(short offset, byte[] output, short outputOffset, short length) {
-		Util.arrayCopy(_fileSystem.getMemory(), getInMemoryOffset(offset), output, outputOffset, length);
+		_fileSystem.read(getInMemoryOffset((short) (offset << 2)), output, outputOffset, (short) (length << 2));
+
+		return (short) (offset + length);
+	}
+
+	/**
+	 * Writes a sequence of words to the file.
+	 * 
+	 * @param source       Buffer containing the data to write.
+	 * @param sourceOffset Offset of the data in previous buffer (BYTES).
+	 * @param offset       Offset in the body where to write the data (WORDS).
+	 * @param length       Length of the data to write (WORDS).
+	 * 
+	 * @return offset + length;
+	 */
+	public short write(byte[] source, short sourceOffset, short offset, short length) {
+		_fileSystem.write(source, sourceOffset, getInMemoryOffset(offset), (short) (length << 2));
 
 		return (short) (offset + length);
 	}

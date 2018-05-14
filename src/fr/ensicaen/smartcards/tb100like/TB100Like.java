@@ -23,8 +23,8 @@ public class TB100Like extends Applet {
 
 	public TB100Like() {
 		_masterFile = new DedicatedFile(new FileSystem(Constants.FILESYSTEM_SIZE, Constants.DF_MAX, Constants.EF_MAX));
-		_masterFile.setup(null, (short) 0, (short) 0x200, Constants.HEADER_MF, (short) 0,
-				(short) Constants.HEADER_MF.length);
+		_masterFile.setup(null, (short) 0, Constants.FILESYSTEM_SIZE, Constants.HEADER_MF, (short) 0,
+				(short) (Constants.HEADER_MF.length>>2));
 	}
 
 	/**
