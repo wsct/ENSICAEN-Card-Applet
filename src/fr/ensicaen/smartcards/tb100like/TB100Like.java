@@ -12,7 +12,21 @@ import javacard.security.*;
  */
 public class TB100Like extends Applet {
 
+	private final static byte[] DF7F00_HEADER = new byte[] { (byte) 0x7F, (byte) 0x00, (byte) 0x00, (byte) 0x22,
+			(byte) 0xFF, (byte) 0xFF, (byte) 0xFE, (byte) 0x62 };
+	private final static byte[] EF_6F01_HEADER = new byte[] { (byte) 0x6F, (byte) 0x01, (byte) 0x00, (byte) 0x10,
+			(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0x83 };
+
 	private final DedicatedFile _masterFile;
+
+	/**
+	 * Currently selected DF.
+	 */
+	private DedicatedFile _currentDF;
+	/**
+	 * Currently selected EF (may be <code>null</code> if none is selected).
+	 */
+	private ElementaryFile _currentEF;
 
 	/**
 	 * {@inheritDoc}
@@ -23,8 +37,16 @@ public class TB100Like extends Applet {
 
 	public TB100Like() {
 		_masterFile = new DedicatedFile(new FileSystem(Constants.FILESYSTEM_SIZE, Constants.DF_MAX, Constants.EF_MAX));
-		_masterFile.setup(null, (short) 0, Constants.FILESYSTEM_SIZE, Constants.HEADER_MF, (short) 0,
-				(short) (Constants.HEADER_MF.length>>2));
+		_masterFile.setup(null, (short) 0, Constants.FILESYSTEM_SIZE, Constants.MF_HEADER, (short) 0,
+				(short) Constants.MF_HEADER.length);
+
+		DedicatedFile df = _masterFile.createDedicatedFile((short) 0x0013, (short) 0x0022, DF7F00_HEADER, (short) 0,
+				(short) DF7F00_HEADER.length);
+		df.createElementaryFile((short) 0x0000, (short) 0x0010, EF_6F01_HEADER, (short) 0,
+				(short) EF_6F01_HEADER.length);
+
+		_currentDF = _masterFile;
+		_currentEF = null;
 	}
 
 	/**
@@ -75,7 +97,35 @@ public class TB100Like extends Applet {
 	 * @param apdu The incoming APDU object
 	 */
 	private void processSelect(APDU apdu) {
-		// TODO Select inner files
+		byte[] buffer = apdu.getBuffer();
+		short bufferLength = apdu.setIncomingAndReceive();
+
+		short udcOffset = APDUHelpers.getOffsetCdata(apdu);
+		short lc = APDUHelpers.getIncomingLength(apdu);
+
+		if (lc != 2) {
+			ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+		}
+
+		short fid = Util.getShort(buffer, udcOffset);
+
+		File file;
+		if (fid == (short) 0x3F00) {
+			file = _masterFile;
+		} else {
+			file = _currentDF.findFileByFileId(fid);
+		}
+
+		if (file == null) {
+			ISOException.throwIt(ISO7816.SW_FILE_NOT_FOUND);
+		}
+
+		if (file.isDF()) {
+			_currentDF = (DedicatedFile) file;
+			_currentEF = null;
+		} else {
+			_currentEF = (ElementaryFile) file;
+		}
 	}
 
 	/**

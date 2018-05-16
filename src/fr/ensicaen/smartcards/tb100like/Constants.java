@@ -15,11 +15,10 @@ public final class Constants {
 	public static final byte[] FCI_APPLET = new byte[] { (byte) 'T', (byte) 'B', (byte) '1', (byte) '0', (byte) '0',
 			(byte) 'L', (byte) 'I', (byte) 'K', (byte) 'E' };
 
-	public static final byte[] FCI_MF = new byte[] { (byte) 0x3F, (byte) 0x00, (byte) 0x20, (byte) 0x18 };
+	public static final byte[] MF_HEADER = new byte[] { (byte) 0x3F, (byte) 0x00, (byte) 0x02, (byte) 0xA1, (byte) 0xFF,
+			(byte) 0xFF, (byte) 0x9E, (byte) 0x81 };
 
-	public static final byte[] HEADER_MF = new byte[] { (byte) 0x3F, (byte) 0x00, (byte) 0x20, (byte) 0x18 };
-
-	public static final short FILESYSTEM_SIZE = (short) 0x0800;
+	public static final short FILESYSTEM_SIZE = (short) 0x029F;
 	public static final byte DF_MAX = (byte) 0x08;
 	public static final byte EF_MAX = (byte) 0x10;
 }
