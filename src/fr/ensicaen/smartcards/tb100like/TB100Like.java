@@ -92,9 +92,9 @@ public class TB100Like extends Applet {
 	}
 
 	/**
-	 * Process SELECT instruction
+	 * Process SELECT instruction (CC4).
 	 *
-	 * @param apdu The incoming APDU object
+	 * @param apdu The incoming APDU object.
 	 */
 	private void processSelect(APDU apdu) {
 		byte[] buffer = apdu.getBuffer();
@@ -120,6 +120,13 @@ public class TB100Like extends Applet {
 			ISOException.throwIt(ISO7816.SW_FILE_NOT_FOUND);
 		}
 
+		// Build and send R-APDU
+		Util.setShort(buffer, (short) 0, file._inParentBodyOffset);
+		Util.setShort(buffer, (short) 2, file.getLength());
+		file.getHeader(buffer, (short) 4);
+		apdu.setOutgoingAndSend((short) 0, (short) (4 + file.getHeaderSize()));
+
+		// Update current DF / EF
 		if (file.isDF()) {
 			_currentDF = (DedicatedFile) file;
 			_currentEF = null;
@@ -152,5 +159,4 @@ public class TB100Like extends Applet {
 			ISOException.throwIt(ISO7816.SW_NO_ERROR);
 		}
 	}
-
 }
