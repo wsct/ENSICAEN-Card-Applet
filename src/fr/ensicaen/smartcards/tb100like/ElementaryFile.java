@@ -63,7 +63,7 @@ public class ElementaryFile extends File {
 	 * @return offset + length
 	 */
 	public short erase(short offset, short length) {
-		_fileSystem.erase((short) (offset << 2), (short) (length << 2));
+		_fileSystem.erase(getInMemoryOffset((short) (offset << 2)), (short) (length << 2));
 
 		return (short) (offset + length);
 	}
