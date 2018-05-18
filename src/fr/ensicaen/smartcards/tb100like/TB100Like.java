@@ -61,16 +61,20 @@ public class TB100Like extends Applet {
 		byte[] apduBuffer = apdu.getBuffer();
 
 		switch (apduBuffer[ISO7816.OFFSET_INS]) {
-		case ISO7816.INS_SELECT:
-			processSelect(apdu);
-			break;
+			case ISO7816.INS_SELECT:
+				processSelect(apdu);
+				break;
 
-		case Constants.INS_GENERATE_RANDOM:
-			processGenerateRandom(apdu);
-			break;
+			case Constants.INS_READ_BINARY:
+				processReadBinary(apdu);
+				break;
+				
+			case Constants.INS_GENERATE_RANDOM:
+				processGenerateRandom(apdu);
+				break;
 
-		default:
-			ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
+			default:
+				ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
 		}
 	}
 
@@ -145,7 +149,50 @@ public class TB100Like extends Applet {
 	}
 
 	/**
-	 * Process GENERATE RANDOM instruction
+	 * Process READ BINARY instruction (CC2)
+	 *
+	 * <p>
+	 * C-APDU: <code>00 B0 00 00 {Le}</code>
+	 * </p>
+	 * <p>
+	 * R-APDU when an EF is selected: <code>{data in EF}</code>
+	 * </p>
+	 * <p>
+	 * R-APDU when no EF is selected: <code>{headers of EF in current DF}</code>
+	 * </p>
+	 * @param apdu The incoming APDU object
+	 */
+	private void processReadBinary(APDU apdu){
+		byte[] apduBuffer = apdu.getBuffer();
+		short Le = apdu.setOutgoing();
+		
+		if(_currentEF != null){
+			// an EF is selected ==> read binary 
+			// TODO: check if EF is an EF/SZ
+			
+			// read file
+			_currentEF.read((short)0, apduBuffer, (short) 0, Le);			
+		}
+		else{
+			// no EF selected ==> DIR 
+			short offset = 0;
+			byte currentChildNumber = 0;
+			File fileChild = _currentDF.getChild(currentChildNumber);
+			// get header of each file in current DF
+			while(fileChild!=null && offset<Le){
+				fileChild.getHeader(apduBuffer, offset);
+				offset += fileChild.getHeaderSize();
+				fileChild = _currentDF.getChild(++currentChildNumber);
+			}
+		}		
+		// and send data!
+		apdu.setOutgoingLength((short) Le);
+		apdu.sendBytes((short) 0, (short) Le);
+		ISOException.throwIt(ISO7816.SW_NO_ERROR);
+	}
+
+	/**
+	 * Process GENERATE RANDOM instruction (CC2)
 	 *
 	 * @param apdu The incoming APDU object
 	 */
@@ -162,7 +209,7 @@ public class TB100Like extends Applet {
 			// generate 8 random bytes
 			RandomData rndGen = RandomData.getInstance(RandomData.ALG_SECURE_RANDOM);
 			rndGen.generateData(apduBuffer, (short) 0, (short) 8);
-			// and send it !
+			// and send it!
 			apdu.setOutgoingLength((short) 8);
 			apdu.sendBytes((short) 0, (short) 8);
 			ISOException.throwIt(ISO7816.SW_NO_ERROR);

@@ -11,6 +11,7 @@ public final class Constants {
 
 	public static final byte INS_GENERATE_RANDOM = (byte) 0xC4;
 	public static final byte INS_SELECT = (byte) 0xA4;
+	public static final byte INS_READ_BINARY = (byte) 0xB0;
 
 	public static final byte[] FCI_APPLET = new byte[] { (byte) 'T', (byte) 'B', (byte) '1', (byte) '0', (byte) '0',
 			(byte) 'L', (byte) 'I', (byte) 'K', (byte) 'E' };
