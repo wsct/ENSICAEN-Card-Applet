@@ -68,7 +68,11 @@ public class TB100Like extends Applet {
 			case Constants.INS_READ_BINARY:
 				processReadBinary(apdu);
 				break;
-				
+
+			case Constants.INS_WRITE_BINARY:
+				processWriteBinary(apdu);
+				break;
+								
 			case Constants.INS_GENERATE_RANDOM:
 				processGenerateRandom(apdu);
 				break;
@@ -164,14 +168,15 @@ public class TB100Like extends Applet {
 	 */
 	private void processReadBinary(APDU apdu){
 		byte[] apduBuffer = apdu.getBuffer();
-		short Le = apdu.setOutgoing();
+		short le = apdu.setOutgoing();
 		
 		if(_currentEF != null){
 			// an EF is selected ==> read binary 
-			// TODO: check if EF is an EF/SZ
-			
+			// TODO: check => is _currentEF an EF/SZ
+			// TODO: check => is le < _currentEF.getLength
+						
 			// read file
-			_currentEF.read((short)0, apduBuffer, (short) 0, Le);			
+			_currentEF.read((short)0, apduBuffer, (short) 0, le);			
 		}
 		else{
 			// no EF selected ==> DIR 
@@ -179,16 +184,42 @@ public class TB100Like extends Applet {
 			byte currentChildNumber = 0;
 			File fileChild = _currentDF.getChild(currentChildNumber);
 			// get header of each file in current DF
-			while(fileChild!=null && offset<Le){
+			while(fileChild!=null && offset<le){
 				fileChild.getHeader(apduBuffer, offset);
 				offset += fileChild.getHeaderSize();
 				fileChild = _currentDF.getChild(++currentChildNumber);
 			}
 		}		
 		// and send data!
-		apdu.setOutgoingLength((short) Le);
-		apdu.sendBytes((short) 0, (short) Le);
-		ISOException.throwIt(ISO7816.SW_NO_ERROR);
+		apdu.setOutgoingLength((short) le);
+		apdu.sendBytes((short) 0, (short) le);
+	}
+
+		/**
+	 * Process Write BINARY instruction (CC3)
+	 *
+	 * <p>
+	 * C-APDU: <code>00 B0 00 00 {Lc} {data} </code>
+	 * </p>
+	 * @param apdu The incoming APDU object
+	 */
+	private void processWriteBinary(APDU apdu){
+		
+		if(_currentEF == null){
+			ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+			return;
+		}
+		
+		// TODO: check ==> security of current EF
+		// TODO: check ==> is lc < _currentEF.getLength
+		byte[] apduBuffer = apdu.getBuffer();
+		short bufferLength = apdu.setIncomingAndReceive();
+		
+		short udcOffset = APDUHelpers.getOffsetCdata(apdu);
+		short lc = APDUHelpers.getIncomingLength(apdu);		
+		
+		_currentEF.write(apduBuffer, udcOffset, (short)0, (short)(lc/4));
+			
 	}
 
 	/**
@@ -199,10 +230,10 @@ public class TB100Like extends Applet {
 	private void processGenerateRandom(APDU apdu) {
 
 		byte[] apduBuffer = apdu.getBuffer();
-		short Le = apdu.setOutgoing();
+		short le = apdu.setOutgoing();
 
 		// verify that Le='08'
-		if (Le != 8) {
+		if (le != 8) {
 			// if not => error
 			ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
 		} else {
@@ -212,7 +243,6 @@ public class TB100Like extends Applet {
 			// and send it!
 			apdu.setOutgoingLength((short) 8);
 			apdu.sendBytes((short) 0, (short) 8);
-			ISOException.throwIt(ISO7816.SW_NO_ERROR);
 		}
 	}
 }
