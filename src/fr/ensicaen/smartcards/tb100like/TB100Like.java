@@ -93,7 +93,16 @@ public class TB100Like extends Applet {
 
 	/**
 	 * Process SELECT instruction (CC4).
-	 *
+	 * <p>
+	 * C-APDU: <code>00 A4 00 00 02 {FID} {Le}</code>
+	 * </p>
+	 * <p>
+	 * R-APDU: <code>{offset} {size} {header}</code>
+	 * </p>
+	 * <p>
+	 * offset, size: 2 bytes each (WORDS).
+	 * </p>
+	 * 
 	 * @param apdu The incoming APDU object.
 	 */
 	private void processSelect(APDU apdu) {
@@ -120,12 +129,6 @@ public class TB100Like extends Applet {
 			ISOException.throwIt(ISO7816.SW_FILE_NOT_FOUND);
 		}
 
-		// Build and send R-APDU
-		Util.setShort(buffer, (short) 0, file._inParentBodyOffset);
-		Util.setShort(buffer, (short) 2, file.getLength());
-		file.getHeader(buffer, (short) 4);
-		apdu.setOutgoingAndSend((short) 0, (short) (4 + file.getHeaderSize()));
-
 		// Update current DF / EF
 		if (file.isDF()) {
 			_currentDF = (DedicatedFile) file;
@@ -133,6 +136,12 @@ public class TB100Like extends Applet {
 		} else {
 			_currentEF = (ElementaryFile) file;
 		}
+
+		// Build and send R-APDU
+		Util.setShort(buffer, (short) 0, (short) (file._inParentBodyOffset >> 2));
+		Util.setShort(buffer, (short) 2, (short) (file.getLength() >> 2));
+		file.getHeader(buffer, (short) 4);
+		apdu.setOutgoingAndSend((short) 0, (short) (4 + file.getHeaderSize()));
 	}
 
 	/**
