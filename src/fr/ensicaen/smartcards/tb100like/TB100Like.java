@@ -72,6 +72,10 @@ public class TB100Like extends Applet {
 			case Constants.INS_WRITE_BINARY:
 				processWriteBinary(apdu);
 				break;
+				
+			case Constants.INS_ERASE:
+				processErase(apdu);
+				break;
 								
 			case Constants.INS_GENERATE_RANDOM:
 				processGenerateRandom(apdu);
@@ -189,14 +193,14 @@ public class TB100Like extends Applet {
 				offset += fileChild.getHeaderSize();
 				fileChild = _currentDF.getChild(++currentChildNumber);
 			}
-		}		
+		}
 		// and send data!
 		apdu.setOutgoingLength((short) le);
 		apdu.sendBytes((short) 0, (short) le);
 	}
 
-		/**
-	 * Process Write BINARY instruction (CC3)
+	/**
+	 * Process WRITE BINARY instruction (CC3)
 	 *
 	 * <p>
 	 * C-APDU: <code>00 B0 00 00 {Lc} {data} </code>
@@ -221,6 +225,38 @@ public class TB100Like extends Applet {
 		_currentEF.write(apduBuffer, udcOffset, (short)0, (short)(lc/4));
 			
 	}
+
+	/**
+	 * Process ERASE instruction (CC3)
+	 *
+	 * <p>
+	 * C-APDU: <code>00 0E 00 00 {Lc} {data} </code>
+	 * </p>
+	 * @param apdu The incoming APDU object
+	 */
+	private void processErase(APDU apdu){
+		
+		if(_currentEF == null){
+			ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+		}
+		
+		// TODO: check ==> security of current EF
+		// TODO: check ==> is length < _currentEF.getLength
+		byte[] apduBuffer = apdu.getBuffer();
+		short bufferLength = apdu.setIncomingAndReceive();
+		
+		short udcOffset = APDUHelpers.getOffsetCdata(apdu);
+		short lc = APDUHelpers.getIncomingLength(apdu);
+		
+		if(lc != 2){
+			ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+		}
+		
+		short length = Util.getShort(apduBuffer, udcOffset);	
+		_currentEF.erase((short)0, length);
+			
+	}
+
 
 	/**
 	 * Process GENERATE RANDOM instruction (CC2)
