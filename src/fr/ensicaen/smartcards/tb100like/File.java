@@ -18,9 +18,18 @@ public abstract class File {
 	protected final FileSystem _fileSystem;
 
 	protected DedicatedFile _parentDF;
+	/**
+	 * Offset of first byte of the file in the parent (BYTES, should be a multiple
+	 * of 4).
+	 */
 	protected short _inParentBodyOffset;
+	/**
+	 * Length of the file (header + body) (WORDS).
+	 */
 	protected short _length;
-
+	/**
+	 * Length of the header (BYTES, should be a multiple of 4).
+	 */
 	private short _headerLength;
 
 	/**
@@ -50,7 +59,7 @@ public abstract class File {
 	}
 
 	/**
-	 * @return Length of the file (header + body).
+	 * @return Length of the file (header + body) (WORDS).
 	 */
 	public final short getLength() {
 		return _length;
@@ -90,10 +99,10 @@ public abstract class File {
 	}
 
 	/**
-	 * @return Size of the header.
+	 * @return Size of the header (WORDS).
 	 */
 	public final short getHeaderSize() {
-		return _headerLength;
+		return (short) (_headerLength >> 2);
 	}
 
 	/**
