@@ -112,7 +112,10 @@ public class TB100Like extends Applet {
 	 * R-APDU: <code>{offset} {size} {header}</code>
 	 * </p>
 	 * <p>
-	 * offset, size: 2 bytes each (WORDS).
+	 * offset: offset of first word of the file, 2 bytes (WORDS).
+	 * </p>
+	 * <p>
+	 * size: size of the body of the file (WORDS).
 	 * </p>
 	 * 
 	 * @param apdu The incoming APDU object.
@@ -150,10 +153,11 @@ public class TB100Like extends Applet {
 		}
 
 		// Build and send R-APDU
+		short headerSize = file.getHeaderSize();
 		Util.setShort(buffer, (short) 0, (short) (file._inParentBodyOffset >> 2));
-		Util.setShort(buffer, (short) 2, (short) (file.getLength() >> 2));
+		Util.setShort(buffer, (short) 2, (short) ((file.getLength() - headerSize)));
 		file.getHeader(buffer, (short) 4);
-		apdu.setOutgoingAndSend((short) 0, (short) (4 + file.getHeaderSize()));
+		apdu.setOutgoingAndSend((short) 0, (short) (4 + (headerSize << 2)));
 	}
 
 	/**
