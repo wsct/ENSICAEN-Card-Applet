@@ -14,6 +14,10 @@ public final class Constants {
 	public static final byte INS_READ_BINARY = (byte) 0xB0;
 	public static final byte INS_WRITE_BINARY = (byte) 0xD0;
 	public static final byte INS_ERASE = (byte) 0x0E;
+	public static final byte INS_CREATE_FILE = (byte) 0xE0;
+
+	public static final byte P1_CREATE_FILE_DF = (byte) 0x01;
+	public static final byte P1_CREATE_FILE_EF = (byte) 0x02;
 
 	public static final byte[] FCI_APPLET = new byte[] { (byte) 'T', (byte) 'B', (byte) '1', (byte) '0', (byte) '0',
 			(byte) 'L', (byte) 'I', (byte) 'K', (byte) 'E' };
