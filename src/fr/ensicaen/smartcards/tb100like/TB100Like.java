@@ -75,6 +75,10 @@ public class TB100Like extends Applet {
 			processCreateFile(apdu);
 			break;
 
+		case Constants.INS_DELETE_FILE:
+			processDeleteFile(apdu);
+			break;
+
 		default:
 			ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
 		}
@@ -86,15 +90,11 @@ public class TB100Like extends Applet {
 	 * @param apdu The incoming APDU object
 	 */
 	private void processAppletSelection(APDU apdu) {
-		short headerSize = _masterFile.getHeaderSize();
+		byte[] buffer = apdu.getBuffer();
 
-		apdu.setOutgoing();
-		apdu.setOutgoingLength(headerSize);
+		_masterFile.getHeader(buffer, (short) 0);
 
-		byte[] output = new byte[headerSize];
-		_masterFile.getHeader(output, (short) 0);
-
-		apdu.sendBytesLong(output, (short) 0, (short) output.length);
+		apdu.setOutgoingAndSend((short) 0, _masterFile.getHeaderSize());
 	}
 
 	/**
@@ -328,6 +328,36 @@ public class TB100Like extends Applet {
 			break;
 		default:
 			ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
+		}
+	}
+
+	/**
+	 * Process DELETE FILE instruction (E4)
+	 * <p>
+	 * C-APDU: 00 E4 00 00 02 {fid}
+	 * </p>
+	 * 
+	 * @param apdu The incoming APDU object.
+	 */
+	private void processDeleteFile(APDU apdu) {
+		byte[] buffer = apdu.getBuffer();
+		short bufferLength = apdu.setIncomingAndReceive();
+
+		short udcOffset = APDUHelpers.getOffsetCdata(apdu);
+		short lc = APDUHelpers.getIncomingLength(apdu);
+
+		if (lc != 2) {
+			ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
+		}
+
+		short fid = Util.getShort(buffer, udcOffset);
+
+		if (_currentDF.deleteFile(fid) == false) {
+			ISOException.throwIt(ISO7816.SW_FILE_NOT_FOUND);
+		}
+
+		if (fid == _currentEF.getFileId()) {
+			_currentEF = null;
 		}
 	}
 }
