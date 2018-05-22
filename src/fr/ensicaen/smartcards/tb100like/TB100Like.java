@@ -234,27 +234,38 @@ public class TB100Like extends Applet {
 	 * 
 	 * @param apdu The incoming APDU object
 	 */
-	private void processErase(APDU apdu) {
-
-		if (_currentEF == null) {
+	private void processErase(APDU apdu){
+		// TODO: check ==> security of current EF
+		
+		// Check if there is a current EF
+		if(_currentEF == null){
 			ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
 		}
-
-		// TODO: check ==> security of current EF
-		// TODO: check ==> is length < _currentEF.getLength
+				
 		byte[] apduBuffer = apdu.getBuffer();
-		short bufferLength = apdu.setIncomingAndReceive();
-
-		short udcOffset = APDUHelpers.getOffsetCdata(apdu);
-		short lc = APDUHelpers.getIncomingLength(apdu);
-
-		if (lc != 2) {
+		short bufferLength = apdu.setIncomingAndReceive();		
+				
+		// Check if Lc ==2
+		short lc = APDUHelpers.getIncomingLength(apdu);		
+		if(lc != 2){
 			ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
 		}
-
-		short length = Util.getShort(apduBuffer, udcOffset);
-		_currentEF.erase((short) 0, length);
-
+		
+		// check if offset < bodyLength
+		short bodyLength = (short)(_currentEF.getLength() - _currentEF.getHeaderSize()); // in WORDS	
+		short offset = Util.getShort(apduBuffer, ISO7816.OFFSET_P1); // in WORDS		
+		if(offset >= bodyLength){
+			ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
+		}
+		
+		// check if offset+length <= bodyLength
+		short udcOffset = APDUHelpers.getOffsetCdata(apdu);		
+		short length = Util.getShort(apduBuffer, udcOffset); // in WORDS
+		if(offset+length > bodyLength){
+			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+		}
+				
+		_currentEF.erase(offset, length);			
 	}
 
 	/**
