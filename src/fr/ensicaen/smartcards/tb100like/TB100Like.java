@@ -171,15 +171,17 @@ public class TB100Like extends Applet {
 	 */
 	private void processReadBinary(APDU apdu) {
 		byte[] apduBuffer = apdu.getBuffer();
-		short le = apdu.setOutgoing();
+		short le = apdu.setOutgoing(); // in BYTES
 
 		if (_currentEF != null) {
 			// an EF is selected ==> read binary
-			// TODO: check => is _currentEF an EF/SZ
-			// TODO: check => is le < _currentEF.getLength
+			short offset = Util.getShort(apduBuffer, ISO7816.OFFSET_P1); // in WORDS
 
-			// read file
+			verifyOutOfFile(offset, (short)(le/4));
+			
 			_currentEF.read((short) 0, apduBuffer, (short) 0, le);
+			// TODO: check => is _currentEF an EF/SZ
+			
 		} else {
 			// no EF selected ==> DIR
 			short offset = 0;
@@ -207,21 +209,19 @@ public class TB100Like extends Applet {
 	 * @param apdu The incoming APDU object
 	 */
 	private void processWriteBinary(APDU apdu) {
-
-		if (_currentEF == null) {
-			ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
-			return;
-		}
-
 		// TODO: check ==> security of current EF
-		// TODO: check ==> is lc < _currentEF.getLength
+
 		byte[] apduBuffer = apdu.getBuffer();
 		short bufferLength = apdu.setIncomingAndReceive();
 
-		short udcOffset = APDUHelpers.getOffsetCdata(apdu);
-		short lc = APDUHelpers.getIncomingLength(apdu);
+		short offset = Util.getShort(apduBuffer, ISO7816.OFFSET_P1); // in WORDS
 
-		_currentEF.write(apduBuffer, udcOffset, (short) 0, (short) (lc / 4));
+		short udcOffset = APDUHelpers.getOffsetCdata(apdu);
+		short length = APDUHelpers.getIncomingLength(apdu); // in BYTES
+		
+		verifyOutOfFile(offset, (short) (length / 4));
+
+		_currentEF.write(apduBuffer, udcOffset, (short) 0, (short) (length / 4));
 
 	}
 
@@ -229,7 +229,7 @@ public class TB100Like extends Applet {
 	 * Process ERASE instruction (CC3)
 	 *
 	 * <p>
-	 * C-APDU: <code>00 0E 00 00 {Lc} {data} </code>
+	 * C-APDU: <code>00 0E {P1-P2: offset} {Lc} {data: length} </code>
 	 * </p>
 	 * 
 	 * @param apdu The incoming APDU object
@@ -237,11 +237,6 @@ public class TB100Like extends Applet {
 	private void processErase(APDU apdu){
 		// TODO: check ==> security of current EF
 		
-		// Check if there is a current EF
-		if(_currentEF == null){
-			ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
-		}
-				
 		byte[] apduBuffer = apdu.getBuffer();
 		short bufferLength = apdu.setIncomingAndReceive();		
 				
@@ -251,20 +246,13 @@ public class TB100Like extends Applet {
 			ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
 		}
 		
-		// check if offset < bodyLength
-		short bodyLength = (short)(_currentEF.getLength() - _currentEF.getHeaderSize()); // in WORDS	
 		short offset = Util.getShort(apduBuffer, ISO7816.OFFSET_P1); // in WORDS		
-		if(offset >= bodyLength){
-			ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
-		}
-		
-		// check if offset+length <= bodyLength
+
 		short udcOffset = APDUHelpers.getOffsetCdata(apdu);		
 		short length = Util.getShort(apduBuffer, udcOffset); // in WORDS
-		if(offset+length > bodyLength){
-			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-		}
-				
+		
+		verifyOutOfFile(offset, length);
+		
 		_currentEF.erase(offset, length);			
 	}
 
@@ -377,4 +365,28 @@ public class TB100Like extends Applet {
 			_currentEF = null;
 		}
 	}
+	
+	/**
+	 * Verify that offset+length fit in current EF
+	 */
+	private void verifyOutOfFile(short offset, short length){
+		// Check if there is a current EF
+		if(_currentEF == null){
+			ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+		}
+		
+		short bodyLength = (short)(_currentEF.getLength() - _currentEF.getHeaderSize()); // in WORDS
+		
+		// check if offset < bodyLength
+		if(offset >= bodyLength){
+			ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
+		}
+		
+		// check if offset+length <= bodyLength
+		if(offset+length > bodyLength){
+			ISOException.throwIt(ISO7816.SW_WRONG_LENGTH );
+		}
+		
+	}
+	
 }

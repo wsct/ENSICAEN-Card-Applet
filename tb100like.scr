@@ -62,6 +62,18 @@
 # READ
 00B0000020;
 
+# READ (expected to fail - length too long)
+00B0010010;
+
+# READ (expected to fail - offset too long)
+00B0000040;
+
+# WRITE (expected to fail - offset too long)
+00D00100080102030405060708;
+
+# WRITE (expected to fail - length too long)
+00D0000D080102030405060708;
+
 # WRITE
 00D00000080102030405060708;
 
@@ -69,10 +81,10 @@
 00B0000020;
 
 # ERASE (expected to fail - offset too long)
-000E0008020001;
+000E0100020001;
 
 # ERASE (expected to fail - too many words to erase)
-000E0000020010;
+000E0000020100;
 
 # ERASE BINARY
 000E0000020001;
