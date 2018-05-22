@@ -158,7 +158,7 @@ public class TB100Like extends Applet {
 	 * Process READ BINARY instruction (CC2)
 	 *
 	 * <p>
-	 * C-APDU: <code>00 B0 00 00 {Le}</code>
+	 * C-APDU: <code>00 B0 {P1-P2: offset} {Le}</code>
 	 * </p>
 	 * <p>
 	 * R-APDU when an EF is selected: <code>{data in EF}</code>
@@ -170,16 +170,17 @@ public class TB100Like extends Applet {
 	 * @param apdu The incoming APDU object
 	 */
 	private void processReadBinary(APDU apdu) {
-		byte[] apduBuffer = apdu.getBuffer();
 		short le = apdu.setOutgoing(); // in BYTES
+		short wordCount = (short)((le+3)/4);
+		byte[] buffer = JCSystem.makeTransientByteArray( (short)(wordCount*4), JCSystem.CLEAR_ON_DESELECT);
 
 		if (_currentEF != null) {
 			// an EF is selected ==> read binary
-			short offset = Util.getShort(apduBuffer, ISO7816.OFFSET_P1); // in WORDS
+			short offset = Util.getShort( apdu.getCurrentAPDUBuffer() , ISO7816.OFFSET_P1); // in WORDS
 
-			verifyOutOfFile(offset, (short)(le/4));
+			verifyOutOfFile(offset, wordCount);
 			
-			_currentEF.read((short) 0, apduBuffer, (short) 0, le);
+			_currentEF.read(offset, buffer, (short) 0, wordCount );
 			// TODO: check => is _currentEF an EF/SZ
 			
 		} else {
@@ -189,21 +190,22 @@ public class TB100Like extends Applet {
 			File fileChild = _currentDF.getChild(currentChildNumber);
 			// get header of each file in current DF
 			while (fileChild != null && offset < le) {
-				fileChild.getHeader(apduBuffer, offset);
+				fileChild.getHeader(buffer, offset);
 				offset += fileChild.getHeaderSize();
 				fileChild = _currentDF.getChild(++currentChildNumber);
 			}
 		}
 		// and send data!
-		apdu.setOutgoingLength((short) le);
-		apdu.sendBytes((short) 0, (short) le);
+		apdu.setOutgoingLength(le);
+		apdu.sendBytesLong(buffer, (short)0, le);
+		
 	}
 
 	/**
 	 * Process WRITE BINARY instruction (CC3)
 	 *
 	 * <p>
-	 * C-APDU: <code>00 B0 00 00 {Lc} {data} </code>
+	 * C-APDU: <code>00 B0 {P1-P2: offset} {Lc} {data} </code>
 	 * </p>
 	 * 
 	 * @param apdu The incoming APDU object
@@ -219,9 +221,16 @@ public class TB100Like extends Applet {
 		short udcOffset = APDUHelpers.getOffsetCdata(apdu);
 		short length = APDUHelpers.getIncomingLength(apdu); // in BYTES
 		
-		verifyOutOfFile(offset, (short) (length / 4));
+		short wordCount = (short)((length+3)/4); // length in WORDS
+		verifyOutOfFile(offset, wordCount);
+		byte[] buffer = JCSystem.makeTransientByteArray( (short)(wordCount*4), JCSystem.CLEAR_ON_DESELECT);
 
-		_currentEF.write(apduBuffer, udcOffset, (short) 0, (short) (length / 4));
+		Util.arrayCopyNonAtomic(apduBuffer, udcOffset, buffer, (short)0, length);
+		for(short i=length; i < wordCount*4; i++){
+			buffer[i]= (byte)0xFF;
+		}
+								
+		_currentEF.write(buffer, (short)0, offset, wordCount );
 
 	}
 
