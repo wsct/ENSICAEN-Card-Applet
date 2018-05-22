@@ -89,12 +89,12 @@ public class TB100Test extends Applet {
 	 * @param apdu The incoming APDU object
 	 */
 	private void processAppletSelection(APDU apdu) {
-		short headerSize = masterFile.getHeaderSize();
+		short outputLength = 4;
 
 		apdu.setOutgoing();
-		apdu.setOutgoingLength(headerSize);
+		apdu.setOutgoingLength(outputLength);
 
-		byte[] output = new byte[headerSize];
+		byte[] output = new byte[outputLength];
 
 		DedicatedFile df = (DedicatedFile) masterFile.findFileByFileId((short) 0x6F00);
 		ElementaryFile ef = (ElementaryFile) df.findFileByFileId((short) 0x7F01);
