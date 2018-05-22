@@ -40,10 +40,10 @@ public class DedicatedFile extends File {
 	/**
 	 * {@inheritDoc}
 	 */
-	public final boolean isAvailable(short offset, short length) {
+	public final boolean isAvailable(short localWordOffset, short length) {
 		for (byte i = 0; i < _childrenCount; i++) {
-			if (offset < (short) (_children[i].getOffset() + _children[i].getLength())
-					|| (short) (offset + length) > _children[i].getOffset()) {
+			if (localWordOffset < (short) (_children[i].getOffset() + _children[i].getLength())
+					|| (short) (localWordOffset + length) > _children[i].getOffset()) {
 				return false;
 			}
 		}

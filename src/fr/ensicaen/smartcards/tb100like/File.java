@@ -73,10 +73,13 @@ public abstract class File {
 	}
 
 	/**
-	 * @return true if all the bytes between offset and offset+length are not yet
-	 *         written.
+	 * @param localWordOffset Offset of the first word to be tested (WORDS)
+	 * @param length          Number of words to be tested (WORDS)
+	 * 
+	 * @return true if all the words in the file between localWordOffset and
+	 *         localWordOffset+length are not yet written.
 	 */
-	public abstract boolean isAvailable(short offset, short length);
+	public abstract boolean isAvailable(short localWordOffset, short length);
 
 	/**
 	 * @return true if the file is an Elementary File.

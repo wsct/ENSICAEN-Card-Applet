@@ -32,8 +32,10 @@ public class ElementaryFile extends File {
 	/**
 	 * {@inheritDoc}
 	 */
-	public boolean isAvailable(short offset, short length) {
-		return _fileSystem.getFreeLength((short) (offset << 2), (short) (length << 2)) == (short) (length << 2);
+	public boolean isAvailable(short localWordOffset, short length) {
+		short offset = (short) (getInMemoryOffset((short) (localWordOffset << 2)) >> 2);
+
+		return _fileSystem.getFreeLength(offset, length) == length;
 	}
 
 	/**
