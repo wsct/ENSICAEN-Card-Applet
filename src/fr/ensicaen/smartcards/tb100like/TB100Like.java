@@ -318,16 +318,22 @@ public class TB100Like extends Applet {
 		short headerOffset = (short) (udcOffset + 4);
 		short headerLength = (short) (lc - 4);
 
+		File file = null;
+
 		byte p1 = buffer[ISO7816.OFFSET_P1];
 		switch (p1) {
 		case Constants.P1_CREATE_FILE_DF:
-			_currentDF.createDedicatedFile(offset, size, buffer, headerOffset, headerLength);
+			file = _currentDF.createDedicatedFile(offset, size, buffer, headerOffset, headerLength);
 			break;
 		case Constants.P1_CREATE_FILE_EF:
-			_currentDF.createElementaryFile(offset, size, buffer, headerOffset, headerLength);
+			file = _currentDF.createElementaryFile(offset, size, buffer, headerOffset, headerLength);
 			break;
 		default:
 			ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
+		}
+
+		if (file == null) {
+			ISOException.throwIt(Constants.SW_NOT_ENOUGH_SPACE_IN_FILE);
 		}
 	}
 

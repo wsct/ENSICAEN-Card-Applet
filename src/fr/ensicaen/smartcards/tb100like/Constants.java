@@ -20,6 +20,11 @@ public final class Constants {
 	public static final byte P1_CREATE_FILE_DF = (byte) 0x01;
 	public static final byte P1_CREATE_FILE_EF = (byte) 0x02;
 
+	/**
+	 * Response status: Not enough memory space in the file = 6A84
+	 */
+	public static final short SW_NOT_ENOUGH_SPACE_IN_FILE = (short) 0x6A84;
+
 	public static final byte[] FCI_APPLET = new byte[] { (byte) 'T', (byte) 'B', (byte) '1', (byte) '0', (byte) '0',
 			(byte) 'L', (byte) 'I', (byte) 'K', (byte) 'E' };
 
