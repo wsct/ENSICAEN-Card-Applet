@@ -183,7 +183,7 @@ public class FileSystem {
 			i += writtenLength;
 			outputOffset += writtenLength;
 			freeLength = (short) (getFreeLength((short) (i / 4), (short) (iMax / 4)) * 4);
-			Util.arrayFillNonAtomic(output, outputOffset, (short) (freeLength / 4), FREE_BYTE);
+			Util.arrayFillNonAtomic(output, outputOffset, freeLength, FREE_BYTE);
 			i += freeLength;
 			outputOffset += freeLength;
 		}
