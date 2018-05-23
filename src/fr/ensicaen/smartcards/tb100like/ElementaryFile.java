@@ -35,7 +35,7 @@ public class ElementaryFile extends File {
 	public boolean isAvailable(short localWordOffset, short length) {
 		short offset = (short) (getInMemoryOffset((short) (localWordOffset << 2)) >> 2);
 
-		return _fileSystem.getFreeLength(offset, length) == length;
+		return _fileSystem.getFreeLength(offset, (short) (offset + length)) == length;
 	}
 
 	/**

@@ -221,21 +221,22 @@ public class TB100Like extends Applet {
 		short udcOffset = APDUHelpers.getOffsetCdata(apdu);
 		short length = APDUHelpers.getIncomingLength(apdu); // in BYTES
 		
-		short wordCount = (short)((length+3)/4); // length in WORDS
+		short wordCount = (short) ((length + 3) / 4); // length in WORDS
 		verifyOutOfFile(offset, wordCount);
 					
-		if( !_currentEF.isAvailable(offset, wordCount) ){
+		if( !_currentEF.isAvailable(offset, wordCount)) {
 			ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
 		}
 		
-		byte[] buffer = JCSystem.makeTransientByteArray( (short)(wordCount*4), JCSystem.CLEAR_ON_DESELECT);
+		byte[] buffer = JCSystem.makeTransientByteArray( (short) (wordCount * 4), JCSystem.CLEAR_ON_DESELECT);
 
-		Util.arrayCopyNonAtomic(apduBuffer, udcOffset, buffer, (short)0, length);
-		for(short i=length; i < wordCount*4; i++){
-			buffer[i]= (byte)0xFF;
+		Util.arrayCopyNonAtomic(apduBuffer, udcOffset, buffer, (short) 0, length);
+		short iMax = (short) (wordCount * 4);
+		for(short i = length; i < iMax ; i++) {
+			buffer[i] = (byte) 0xFF;
 		}
 								
-		_currentEF.write(buffer, (short)0, offset, wordCount );
+		_currentEF.write(buffer, (short) 0, offset, wordCount );
 
 	}
 
