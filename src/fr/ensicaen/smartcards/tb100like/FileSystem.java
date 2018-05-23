@@ -116,11 +116,11 @@ public class FileSystem {
 	 * @param from Offset in the body from where to look for free words (WORDS).
 	 * @param to   Maximum offset to look for (WORDS).
 	 * 
-	 * @return Number of consecutive free words.
+	 * @return Number of consecutive free words (WORDS).
 	 */
 	public short getFreeLength(short from, short to) {
 		short i = from;
-		// TODO
+
 		while (i <= to && _attributes[i] != ATTRIBUTE_WRITTEN) {
 			i++;
 		}
@@ -178,11 +178,11 @@ public class FileSystem {
 		short writtenLength;
 		short freeLength;
 		while (i < iMax) {
-			writtenLength = (short) (getWrittenLength((short) (i / 4), (short) (iMax / 4)) * 4);
+			writtenLength = (short) (getWrittenLength((short) (i >> 2), (short) (iMax >> 2)) << 2);
 			Util.arrayCopyNonAtomic(_memory, i, output, outputOffset, writtenLength);
 			i += writtenLength;
 			outputOffset += writtenLength;
-			freeLength = (short) (getFreeLength((short) (i / 4), (short) (iMax / 4)) * 4);
+			freeLength = (short) (getFreeLength((short) (i >> 2), (short) (iMax >> 2)) << 2);
 			Util.arrayFillNonAtomic(output, outputOffset, freeLength, FREE_BYTE);
 			i += freeLength;
 			outputOffset += freeLength;
