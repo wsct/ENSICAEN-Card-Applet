@@ -223,6 +223,11 @@ public class TB100Like extends Applet {
 		
 		short wordCount = (short)((length+3)/4); // length in WORDS
 		verifyOutOfFile(offset, wordCount);
+					
+		if( !_currentEF.isAvailable(offset, wordCount) ){
+			ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+		}
+		
 		byte[] buffer = JCSystem.makeTransientByteArray( (short)(wordCount*4), JCSystem.CLEAR_ON_DESELECT);
 
 		Util.arrayCopyNonAtomic(apduBuffer, udcOffset, buffer, (short)0, length);

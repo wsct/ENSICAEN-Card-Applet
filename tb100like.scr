@@ -92,6 +92,9 @@
 # READ
 00B0000008;
 
+# WRITE (expected to fail - already written)
+00D000000701020304050607;
+
 # ERASE
 000E0001020001;
 
