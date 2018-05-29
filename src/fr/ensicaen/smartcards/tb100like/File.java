@@ -4,7 +4,6 @@
 
 package fr.ensicaen.smartcards.tb100like;
 
-import javacard.framework.ISOException;
 import javacard.framework.Util;
 
 /**
