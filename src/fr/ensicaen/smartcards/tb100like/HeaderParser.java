@@ -44,7 +44,7 @@ public class HeaderParser {
         } else if ((qualifier & FILETYPE_EFSZ) == FILETYPE_EFSZ) {
             fileType = FILETYPE_EFSZ;
             headerLength = 4;
-            bodyLength = (short) (header[offset + 2] & 0x0F);
+            bodyLength = (short) (header[(short) (offset + 2)] & 0x0F);
         } else {
             return false;
         }
