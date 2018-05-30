@@ -85,7 +85,7 @@ public abstract class File {
     public abstract boolean isDF();
 
     /**
-     * @param true if the file is a Dedicated File.
+     * @return true if the file is a Dedicated File.
      */
     public abstract boolean isEF();
 

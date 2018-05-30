@@ -18,8 +18,8 @@ public class FileSystem {
 
     private byte _dfMax;
     private byte _efMax;
-    final ElementaryFile[] _elementaryFiles;
-    final DedicatedFile[] _dedicatedFiles;
+    final ElementaryFile[] elementaryFiles;
+    final DedicatedFile[] dedicatedFiles;
 
     /**
      * Raw data storage.
@@ -31,7 +31,7 @@ public class FileSystem {
      * <p>
      * 1 attribute byte per data word.
      */
-    final byte[] _attributes;
+    final byte[] attributes;
 
     /**
      * Creates a new virtual file system in memory.
@@ -46,20 +46,20 @@ public class FileSystem {
 
         // Allocation of data memory
         memory = new byte[(short) (size << 2)];
-        _attributes = new byte[size];
+        attributes = new byte[size];
         erase((short) 0, (short) (size << 2));
 
         // Allocation of DF files structures
-        _dedicatedFiles = new DedicatedFile[_dfMax];
+        dedicatedFiles = new DedicatedFile[_dfMax];
         byte i;
         for (i = 0; i < _dfMax; i++) {
-            _dedicatedFiles[i] = new DedicatedFile(this);
+            dedicatedFiles[i] = new DedicatedFile(this);
         }
 
         // Allocation of EF files structures
-        _elementaryFiles = new ElementaryFile[_efMax];
+        elementaryFiles = new ElementaryFile[_efMax];
         for (i = 0; i < _efMax; i++) {
-            _elementaryFiles[i] = new ElementaryFile(this);
+            elementaryFiles[i] = new ElementaryFile(this);
         }
     }
 
@@ -81,7 +81,7 @@ public class FileSystem {
         Util.arrayFillNonAtomic(memory, offset, length, FREE_BYTE);
 
         // Update "written" attributes of erased words
-        Util.arrayFillNonAtomic(_attributes, (short) (offset / 4), (short) (length / 4), ATTRIBUTE_FREE);
+        Util.arrayFillNonAtomic(attributes, (short) (offset / 4), (short) (length / 4), ATTRIBUTE_FREE);
 
         return (short) (offset + length);
     }
@@ -93,10 +93,10 @@ public class FileSystem {
      */
     public final DedicatedFile getFreeDF() {
         byte index = 0;
-        while (index < _dfMax && _dedicatedFiles[index].getLength() != 0) {
+        while (index < _dfMax && dedicatedFiles[index].getLength() != 0) {
             index++;
         }
-        return (index == _dfMax ? null : _dedicatedFiles[index]);
+        return (index == _dfMax ? null : dedicatedFiles[index]);
     }
 
     /**
@@ -106,10 +106,10 @@ public class FileSystem {
      */
     public final ElementaryFile getFreeEF() {
         byte index = 0;
-        while (index < _efMax && _elementaryFiles[index].getLength() != 0) {
+        while (index < _efMax && elementaryFiles[index].getLength() != 0) {
             index++;
         }
-        return (index == _efMax ? null : _elementaryFiles[index]);
+        return (index == _efMax ? null : elementaryFiles[index]);
     }
 
     /**
@@ -120,7 +120,7 @@ public class FileSystem {
     public short getFreeLength(short from, short to) {
         short i = from;
 
-        while (i <= to && _attributes[i] != ATTRIBUTE_WRITTEN) {
+        while (i <= to && attributes[i] != ATTRIBUTE_WRITTEN) {
             i++;
         }
 
@@ -139,7 +139,7 @@ public class FileSystem {
     public short getWrittenLength(short from, short to) {
         short i = from;
         // TODO
-        while (i <= to && _attributes[i] == ATTRIBUTE_WRITTEN) {
+        while (i <= to && attributes[i] == ATTRIBUTE_WRITTEN) {
             i++;
         }
 
@@ -196,7 +196,7 @@ public class FileSystem {
         Util.arrayCopyNonAtomic(source, sourceOffset, memory, offset, length);
 
         // Update "written" attributes of used words
-        Util.arrayFillNonAtomic(_attributes, (short) (offset / 4), (short) (length / 4), ATTRIBUTE_WRITTEN);
+        Util.arrayFillNonAtomic(attributes, (short) (offset / 4), (short) (length / 4), ATTRIBUTE_WRITTEN);
 
         return (short) (offset + length);
     }
