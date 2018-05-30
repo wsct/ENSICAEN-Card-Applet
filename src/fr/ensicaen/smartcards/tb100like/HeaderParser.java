@@ -3,6 +3,7 @@ package fr.ensicaen.smartcards.tb100like;
 import javacard.framework.Util;
 
 public class HeaderParser {
+    public static final byte FILETYPE_UNKNOWN = (byte) 0xFF;
     public static final byte FILETYPE_DF = (byte) 0x3D;
     public static final byte FILETYPE_EFWZ = (byte) 0x2D;
     public static final byte FILETYPE_EFSZ = (byte) 0x0C;
@@ -27,27 +28,42 @@ public class HeaderParser {
     /**
      * Parses the header starting at offset in header byte array.
      *
+     * @param buffer Buffer containing the header.
+     * @param offset Offset of the first byte of the header in the buffer.
+     * @param length Length of the buffer (BYTES).
+     * 
      * @return true if successful
      */
-    public boolean parse(byte[] header, short offset) {
-        fileIdentifier = Util.getShort(header, offset);
+    public boolean parse(byte[] buffer, short offset, short length) {
+        fileType = FILETYPE_UNKNOWN;
 
-        byte qualifier = header[offset];
+        byte qualifier = buffer[offset];
         if ((qualifier & FILETYPE_DF) == FILETYPE_DF) {
+            if (length - offset < 8) {
+                return false;
+            }
             fileType = FILETYPE_DF;
             headerLength = 8;
-            bodyLength = (short) (Util.getShort(header, (short) (offset + 2)) - 2);
+            bodyLength = (short) (Util.getShort(buffer, (short) (offset + 2)) - 2);
         } else if ((qualifier & FILETYPE_EFWZ) == FILETYPE_EFWZ) {
+            if (length - offset < 8) {
+                return false;
+            }
             fileType = FILETYPE_EFWZ;
             headerLength = 8;
-            bodyLength = (short) (Util.getShort(header, (short) (offset + 2)) - 2);
+            bodyLength = (short) (Util.getShort(buffer, (short) (offset + 2)) - 2);
         } else if ((qualifier & FILETYPE_EFSZ) == FILETYPE_EFSZ) {
+            if (length - offset < 4) {
+                return false;
+            }
             fileType = FILETYPE_EFSZ;
             headerLength = 4;
-            bodyLength = (short) (header[(short) (offset + 2)] & 0x0F);
+            bodyLength = (short) ((buffer[(short) (offset + 2)] & 0x0F) - 1);
         } else {
             return false;
         }
+
+        fileIdentifier = Util.getShort(buffer, offset);
 
         return true;
     }

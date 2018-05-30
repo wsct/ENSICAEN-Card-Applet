@@ -34,10 +34,7 @@ public abstract class File {
     /**
      * Initializes a new file.
      *
-     * @param parentDF Parent DF.
-     * @param offset   Start byte index of the file in parent DF data zone.
-     * @param size     Size used by the file (header+body).
-     * @param header   File header.
+     * @param fileSystem FileSystem instance in which the file lives.
      */
     public File(FileSystem fileSystem) {
         _fileSystem = fileSystem;

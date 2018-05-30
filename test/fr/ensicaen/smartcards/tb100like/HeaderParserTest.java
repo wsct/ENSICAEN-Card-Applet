@@ -13,7 +13,7 @@ class HeaderParserTest {
         };
 
         HeaderParser parser = new HeaderParser();
-        parser.parse(buffer, (short) 4);
+        parser.parse(buffer, (short) 4, (short) buffer.length);
 
         assertEquals(HeaderParser.FILETYPE_DF, parser.fileType);
         assertEquals((short) 0x3F00, parser.fileIdentifier);
@@ -28,12 +28,24 @@ class HeaderParserTest {
         };
 
         HeaderParser parser = new HeaderParser();
-        parser.parse(buffer, (short) 0);
+        parser.parse(buffer, (short) 0, (short) buffer.length);
 
         assertEquals(HeaderParser.FILETYPE_DF, parser.fileType);
         assertEquals((short) 0x7F00, parser.fileIdentifier);
         assertEquals((short) 8, parser.headerLength);
         assertEquals((short) 0x0020, parser.bodyLength);
+    }
+
+    @Test
+    void parseDFHeaderTooShort() {
+        byte[] buffer = new byte[]{
+                (byte) 0x7F, (byte) 0x00, (byte) 0x00, (byte) 0x22, (byte) 0xFF, (byte) 0xFF, (byte) 0xFE
+        };
+
+        HeaderParser parser = new HeaderParser();
+
+        assertFalse(parser.parse(buffer, (short) 0, (short) buffer.length));
+        assertEquals(HeaderParser.FILETYPE_UNKNOWN, parser.fileType);
     }
 
     @Test
@@ -43,7 +55,7 @@ class HeaderParserTest {
         };
 
         HeaderParser parser = new HeaderParser();
-        parser.parse(buffer, (short) 4);
+        parser.parse(buffer, (short) 4, (short) buffer.length);
 
         assertEquals(HeaderParser.FILETYPE_EFWZ, parser.fileType);
         assertEquals((short) 0x6F01, parser.fileIdentifier);
@@ -58,11 +70,11 @@ class HeaderParserTest {
         };
 
         HeaderParser parser = new HeaderParser();
-        parser.parse(buffer, (short) 0);
+        parser.parse(buffer, (short) 0, (short) buffer.length);
 
         assertEquals(HeaderParser.FILETYPE_EFSZ, parser.fileType);
         assertEquals((short) 0x0E10, parser.fileIdentifier);
         assertEquals((short) 4, parser.headerLength);
-        assertEquals((short) 3, parser.bodyLength);
+        assertEquals((short) 2, parser.bodyLength);
     }
 }
