@@ -5,5 +5,5 @@ bookMarkInfo.xml
 LocalJavahomeProperty.xml
 LocalJChomeProperty.xml
 bin/
-.idea/
 out/
+.idea/workspace.xml
