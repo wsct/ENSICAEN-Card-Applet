@@ -329,8 +329,7 @@ public class TB100Like extends Applet {
 		if (!_headerParser.parse(buffer, headerOffset, (short) (headerOffset + headerLength))) {
 			ISOException.throwIt(ISO7816.SW_DATA_INVALID);
 		}
-		short size = _headerParser.headerLength;
-		short fid = _headerParser.fileIdentifier;
+		short size = (short) (_headerParser.bodyLength + (short) (_headerParser.headerLength >> 2));
 
 		File file = null;
 
