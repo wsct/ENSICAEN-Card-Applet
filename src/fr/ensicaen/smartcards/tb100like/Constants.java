@@ -17,6 +17,7 @@ public final class Constants {
 	public static final byte INS_SELECT = (byte) 0xA4;
 	public static final byte INS_WRITE_BINARY = (byte) 0xD0;
 
+	// TODO Remove these constants
 	public static final byte P1_CREATE_FILE_DF = (byte) 0x01;
 	public static final byte P1_CREATE_FILE_EF = (byte) 0x02;
 
