@@ -142,7 +142,7 @@ class FileSystemTest {
         short readOffset = (short) (offset - 4);
         short readLength = (short) (length + 8);
         byte[] output = new byte[readLength];
-        fileSystem.read(readOffset, output, (short) 0, readLength);
+        fileSystem.read(readOffset, output, (short) 0, readLength, false);
 
         byte[] expected = new byte[]{
                 FileSystem.FREE_BYTE, FileSystem.FREE_BYTE, FileSystem.FREE_BYTE, FileSystem.FREE_BYTE,
