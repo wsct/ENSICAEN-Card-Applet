@@ -35,7 +35,7 @@ public class ElementaryFile extends File {
 	public boolean isAvailable(short localWordOffset, short length) {
 		short offset = (short) (getInMemoryOffset((short) (localWordOffset << 2)) >> 2);
 
-		return _fileSystem.getFreeLength(offset, length) == length;
+		return _fileSystem.getFreeLength(offset, (short) (offset + length)) == length;
 	}
 
 	/**
@@ -81,8 +81,8 @@ public class ElementaryFile extends File {
 	 * 
 	 * @return offset + length;
 	 */
-	public short read(short offset, byte[] output, short outputOffset, short length) {
-		_fileSystem.read(getInMemoryOffset((short) (offset << 2)), output, outputOffset, (short) (length << 2));
+	public short read(short offset, byte[] output, short outputOffset, short length, boolean secureRead) {
+		_fileSystem.read(getInMemoryOffset((short) (offset << 2)), output, outputOffset, (short) (length << 2), secureRead);
 
 		return (short) (offset + length);
 	}

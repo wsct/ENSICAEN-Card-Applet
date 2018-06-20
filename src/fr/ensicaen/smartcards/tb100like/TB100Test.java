@@ -98,7 +98,7 @@ public class TB100Test extends Applet {
 
 		DedicatedFile df = (DedicatedFile) masterFile.findFileByFileId((short) 0x6F00);
 		ElementaryFile ef = (ElementaryFile) df.findFileByFileId((short) 0x7F01);
-		ef.read((short) 0, output, (short) 0, (short) 1);
+		ef.read((short) 0, output, (short) 0, (short) 1, false);
 
 		apdu.sendBytesLong(output, (short) 0, (short) output.length);
 	}
