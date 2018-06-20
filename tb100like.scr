@@ -71,7 +71,7 @@
 # WRITE (expected to fail - offset too long)
 00D001000701020304050607;
 
-# WRITE (expected to fail - length too long)
+# WRITE (expected to fail - offset+length too long)
 00D0000D0701020304050607;
 
 # WRITE

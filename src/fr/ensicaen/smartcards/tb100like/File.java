@@ -93,7 +93,7 @@ public abstract class File {
      * @param offset Offset in previous buffer where to write the header.
      */
     public final void getHeader(byte[] output, short offset) {
-        _fileSystem.read(getInMemoryOffset((short) (-_headerLength)), output, offset, _headerLength);
+        _fileSystem.read(getInMemoryOffset((short) (-_headerLength)), output, offset, _headerLength, false);
     }
 
     /**

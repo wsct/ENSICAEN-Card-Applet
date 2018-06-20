@@ -181,9 +181,11 @@ public class TB100Like extends Applet {
 			short offset = Util.getShort( apdu.getCurrentAPDUBuffer() , ISO7816.OFFSET_P1); // in WORDS
 
 			verifyOutOfFile(offset, wordCount);
-			
-			_currentEF.read(offset, buffer, (short) 0, wordCount );
-			// TODO: check => is _currentEF an EF/SZ
+
+			byte[] header = JCSystem.makeTransientByteArray( (short)8, JCSystem.CLEAR_ON_DESELECT);
+			_currentEF.getHeader(header, (short)0 );
+			_headerParser.parse(header, (short)0, (short)8);		
+			_currentEF.read(offset, buffer, (short) 0, wordCount, _headerParser.fileType == _headerParser.FILETYPE_EFSZ );		
 			
 		} else {
 			// no EF selected ==> DIR
@@ -207,7 +209,13 @@ public class TB100Like extends Applet {
 	 * Process WRITE BINARY instruction (CC3)
 	 *
 	 * <p>
-	 * C-APDU: <code>00 B0 {P1-P2: offset} {Lc} {data} </code>
+	 * C-APDU: <code>00 B0 {offset} {Lc} {data} </code>
+	 * </p>
+	 * <p>
+	 * offset: offset of first word of the file coded by P1 P2 (WORDS) to be written.
+	 * </p>
+	 * <p>
+	 * data: data to be written in file.
 	 * </p>
 	 *
 	 * @param apdu The incoming APDU object
@@ -218,26 +226,28 @@ public class TB100Like extends Applet {
 		byte[] apduBuffer = apdu.getBuffer();
 		short bufferLength = apdu.setIncomingAndReceive();
 
-		short offset = Util.getShort(apduBuffer, ISO7816.OFFSET_P1); // in WORDS
-
-		short udcOffset = APDUHelpers.getOffsetCdata(apdu);
-		short length = APDUHelpers.getIncomingLength(apdu); // in BYTES
-		
+		short offset = Util.getShort(apduBuffer, ISO7816.OFFSET_P1); // in WORDS		
+		short length = APDUHelpers.getIncomingLength(apdu); // in BYTES		
 		short wordCount = (short) ((length + 3) / 4); // length in WORDS
-		verifyOutOfFile(offset, wordCount);
-					
+		
+		// availability check
+		verifyOutOfFile(offset, wordCount);					
 		if( !_currentEF.isAvailable(offset, wordCount)) {
 			ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
 		}
 		
+		// copy data in a buffer
 		byte[] buffer = JCSystem.makeTransientByteArray( (short) (wordCount * 4), JCSystem.CLEAR_ON_DESELECT);
-
+		short udcOffset = APDUHelpers.getOffsetCdata(apdu);	
 		Util.arrayCopyNonAtomic(apduBuffer, udcOffset, buffer, (short) 0, length);
+		
+		// complete words with FF in buffer
 		short iMax = (short) (wordCount * 4);
 		for(short i = length; i < iMax ; i++) {
 			buffer[i] = (byte) 0xFF;
 		}
-								
+		
+		// and write data to file
 		_currentEF.write(buffer, (short) 0, offset, wordCount );
 
 	}
@@ -246,18 +256,19 @@ public class TB100Like extends Applet {
 	 * Process ERASE instruction (CC3)
 	 *
 	 * <p>
-	 * C-APDU: <code>00 0E {P1-P2: offset} {Lc} {data: length} </code>
+	 * C-APDU: <code>00 0E {offset} {Lc} {length} </code>
+	 * </p>
+	 * <p>
+	 * offset: offset of first word of the file coded by P1 P2 (WORDS) to be erased.
+	 * </p>
+	 * <p>
+	 * length: number of words to be erased
 	 * </p>
 	 *
 	 * @param apdu The incoming APDU object
 	 */
 	private void processErase(APDU apdu) {
 		// TODO: check ==> security of current EF
-
-		// Check if there is a current EF
-		if (_currentEF == null) {
-			ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
-		}
 
 		byte[] apduBuffer = apdu.getBuffer();
 		short bufferLength = apdu.setIncomingAndReceive();
@@ -267,15 +278,8 @@ public class TB100Like extends Applet {
 		if (lc != 2) {
 			ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
 		}
-
-		// check if offset < bodyLength
-		short bodyLength = (short) (_currentEF.getLength() - _currentEF.getHeaderSize()); // in WORDS
+		
 		short offset = Util.getShort(apduBuffer, ISO7816.OFFSET_P1); // in WORDS
-		if (offset >= bodyLength) {
-			ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
-		}
-
-		// check if offset+length <= bodyLength
 		short udcOffset = APDUHelpers.getOffsetCdata(apdu);
 		short length = Util.getShort(apduBuffer, udcOffset); // in WORDS
 		
@@ -286,6 +290,9 @@ public class TB100Like extends Applet {
 
 	/**
 	 * Process GENERATE RANDOM instruction (CC2)
+	 * <p>
+	 * C-APDU: <code>00 C4 00 00 08</code>
+	 * </p>
 	 *
 	 * @param apdu The incoming APDU object
 	 */
@@ -311,13 +318,10 @@ public class TB100Like extends Applet {
 	/**
 	 * Process CREATE FILE instruction (E0)
 	 * <p>
-	 * C-APDU: 00 E0 {offset} {Lc} {header}
+	 * C-APDU: <code>00 E0 {offset} {Lc} {header}</code>
 	 * </p>
 	 * <p>
 	 * offset: offset of first word of the file coded by P1 P2 (WORDS).
-	 * </p>
-	 * <p>
-	 * size: size of the body of the file (WORDS).
 	 * </p>
 	 * <p>
 	 * header: header of the new file, must be word aligned.
@@ -368,7 +372,7 @@ public class TB100Like extends Applet {
 	/**
 	 * Process DELETE FILE instruction (E4)
 	 * <p>
-	 * C-APDU: 00 E4 00 00 02 {fid}
+	 * C-APDU: <code>00 E4 00 00 02 {fid}</code>
 	 * </p>
 	 *
 	 * @param apdu The incoming APDU object.

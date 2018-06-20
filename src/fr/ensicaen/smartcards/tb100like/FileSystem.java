@@ -15,6 +15,7 @@ public class FileSystem {
     final static byte ATTRIBUTE_FREE = (byte) 0x00;
 
     public final static byte FREE_BYTE = (byte) 0xFF;
+    public final static byte WRITTEN_BYTE = (byte) 0x00;
 
     private byte _dfMax;
     private byte _efMax;
@@ -161,7 +162,7 @@ public class FileSystem {
      * @param length       Length of the data to read (BYTES).
      * @return new in memory offset
      */
-    public final short read(short offset, byte[] output, short outputOffset, short length) {
+    public final short read(short offset, byte[] output, short outputOffset, short length, boolean secureRead) {
 
         short iMax = (short) (offset + length);
         short i = offset;
@@ -169,7 +170,12 @@ public class FileSystem {
         short freeLength;
         while (i < iMax) {
             writtenLength = (short) (getWrittenLength((short) (i >> 2), (short) (iMax >> 2)) << 2);
-            Util.arrayCopyNonAtomic(memory, i, output, outputOffset, writtenLength);
+            if(secureRead){
+				Util.arrayFillNonAtomic(output, outputOffset, writtenLength, WRITTEN_BYTE);
+            }
+            else{
+				Util.arrayCopyNonAtomic(memory, i, output, outputOffset, writtenLength);
+            }            
             i += writtenLength;
             outputOffset += writtenLength;
             freeLength = (short) (getFreeLength((short) (i >> 2), (short) (iMax >> 2)) << 2);
@@ -179,7 +185,7 @@ public class FileSystem {
         }
 
         return (short) (outputOffset + length);
-    }
+    }    
 
     /**
      * Writes data in memory.
