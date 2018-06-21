@@ -13,9 +13,6 @@ class APDUHelpersTest {
     private final byte[] extendedLcCommand = {(byte) 0x00, (byte) 0xA4, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x02, (byte) 0x3F, (byte) 0x00, (byte) 0x00};
     private APDU apdu;
 
-    void APDUHelpersTest() {
-    }
-
     @Test
     void getIncomingShortLength() {
         apdu = mock(APDU.class);

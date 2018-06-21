@@ -153,6 +153,30 @@ class FileSystemTest {
     }
 
     @Test
+    void secureReadBytesInMemory() {
+        FileSystem fileSystem = new FileSystem((short) 0x100, (byte) 2, (byte) 3);
+        byte[] source = new byte[]{
+                (byte) '1', (byte) '2', (byte) '3', (byte) '4'
+        };
+        short sourceOffset = (short) 0x00;
+        short length = (short) (source.length - sourceOffset);
+        short offset = (short) 0x10;
+        fileSystem.write(source, sourceOffset, offset, length);
+
+        short readOffset = (short) (offset - 4);
+        short readLength = (short) (length + 8);
+        byte[] output = new byte[readLength];
+        fileSystem.read(readOffset, output, (short) 0, readLength, true);
+
+        byte[] expected = new byte[]{
+                FileSystem.FREE_BYTE, FileSystem.FREE_BYTE, FileSystem.FREE_BYTE, FileSystem.FREE_BYTE,
+                FileSystem.WRITTEN_BYTE, FileSystem.WRITTEN_BYTE, FileSystem.WRITTEN_BYTE, FileSystem.WRITTEN_BYTE,
+                FileSystem.FREE_BYTE, FileSystem.FREE_BYTE, FileSystem.FREE_BYTE, FileSystem.FREE_BYTE
+        };
+        assertArrayEquals(expected, output);
+    }
+
+    @Test
     void writeBytesInMemory() {
         FileSystem fileSystem = new FileSystem((short) 0x100, (byte) 2, (byte) 3);
         byte[] source = new byte[]{

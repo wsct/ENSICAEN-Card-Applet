@@ -185,7 +185,7 @@ public class TB100Like extends Applet {
             byte[] header = JCSystem.makeTransientByteArray((short) 8, JCSystem.CLEAR_ON_DESELECT);
             _currentEF.getHeader(header, (short) 0);
             _headerParser.parse(header, (short) 0, (short) 8);
-            _currentEF.read(offset, buffer, (short) 0, wordCount, _headerParser.fileType == _headerParser.FILETYPE_EFSZ);
+            _currentEF.read(offset, buffer, (short) 0, wordCount, _headerParser.fileType == HeaderParser.FILETYPE_EFSZ);
 
         } else {
             // no EF selected ==> DIR
@@ -224,7 +224,7 @@ public class TB100Like extends Applet {
         // TODO: check ==> security of current EF
 
         byte[] apduBuffer = apdu.getBuffer();
-        short bufferLength = apdu.setIncomingAndReceive();
+        apdu.setIncomingAndReceive();
 
         short offset = Util.getShort(apduBuffer, ISO7816.OFFSET_P1); // in WORDS
         short length = APDUHelpers.getIncomingLength(apdu); // in BYTES
@@ -271,7 +271,7 @@ public class TB100Like extends Applet {
         // TODO: check ==> security of current EF
 
         byte[] apduBuffer = apdu.getBuffer();
-        short bufferLength = apdu.setIncomingAndReceive();
+        apdu.setIncomingAndReceive();
 
         // Check if Lc ==2
         short lc = APDUHelpers.getIncomingLength(apdu);
@@ -331,18 +331,16 @@ public class TB100Like extends Applet {
      */
     private void processCreateFile(APDU apdu) {
         byte[] buffer = apdu.getBuffer();
-        short bufferLength = apdu.setIncomingAndReceive();
+        apdu.setIncomingAndReceive();
 
-        short udcOffset = APDUHelpers.getOffsetCdata(apdu);
-        short lc = APDUHelpers.getIncomingLength(apdu);
+        short headerOffset = APDUHelpers.getOffsetCdata(apdu);
+        short headerLength = APDUHelpers.getIncomingLength(apdu);
 
-        if (lc < 4) {
+        if (headerLength < 4) {
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
         }
 
         short offset = Util.getShort(buffer, ISO7816.OFFSET_P1);
-        short headerOffset = udcOffset;
-        short headerLength = lc;
 
         if (!_headerParser.parse(buffer, headerOffset, (short) (headerOffset + headerLength))) {
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
