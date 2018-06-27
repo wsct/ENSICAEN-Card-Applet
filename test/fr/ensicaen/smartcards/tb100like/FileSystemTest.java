@@ -153,6 +153,56 @@ class FileSystemTest {
     }
 
     @Test
+    void search4BytesInMemory() {
+        FileSystem fileSystem = new FileSystem((short) 0x100, (byte) 2, (byte) 3);
+        byte[] source = new byte[]{
+                (byte) '1', (byte) '2', (byte) '3', (byte) '4'
+        };
+        short sourceOffset = (short) 0x00;
+        short length = (short) (source.length - sourceOffset);
+        short offset = (short) 0x10;
+        fileSystem.write(source, sourceOffset, offset, length);
+
+        byte[] aValue = new byte[]{
+                (byte) 'X', (byte) 'Y', (byte) '1', (byte) '2',
+                (byte) '3', (byte) '4', (byte) '5', (byte) '6'
+        };
+        assertEquals(0x04, fileSystem.search((short) 0, (short) 0x100, aValue, (short) 2, (short) 4));
+
+        assertEquals((short) -1, fileSystem.search((short) 0x20, (short) 0xE0, aValue, (short) 2, (short) 4));
+
+        byte[] otherValue = new byte[]{
+                (byte) '1', (byte) '2', (byte) '3', (byte) '5'
+        };
+        assertEquals((short) -1, fileSystem.search((short) 0, (short) 0x100, otherValue, (short) 0, (short) 4));
+    }
+
+    @Test
+    void search2BytesInMemory() {
+        FileSystem fileSystem = new FileSystem((short) 0x100, (byte) 2, (byte) 3);
+        byte[] source = new byte[]{
+                (byte) '1', (byte) '2', (byte) '3', (byte) '4'
+        };
+        short sourceOffset = (short) 0x00;
+        short length = (short) (source.length - sourceOffset);
+        short offset = (short) 0x10;
+        fileSystem.write(source, sourceOffset, offset, length);
+
+        byte[] aValue = new byte[]{
+                (byte) 'X', (byte) 'Y', (byte) '1', (byte) '2',
+                (byte) '3', (byte) '4', (byte) '5', (byte) '6'
+        };
+        assertEquals(0x04, fileSystem.search((short) 0, (short) 0x100, aValue, (short) 2, (short) 2));
+
+        assertEquals((short) -1, fileSystem.search((short) 0x20, (short) 0xE0, aValue, (short) 2, (short) 2));
+
+        byte[] otherValue = new byte[]{
+                (byte) '2', (byte) '1'
+        };
+        assertEquals((short) -1, fileSystem.search((short) 0, (short) 0x100, otherValue, (short) 0, (short) 2));
+    }
+
+    @Test
     void secureReadBytesInMemory() {
         FileSystem fileSystem = new FileSystem((short) 0x100, (byte) 2, (byte) 3);
         byte[] source = new byte[]{

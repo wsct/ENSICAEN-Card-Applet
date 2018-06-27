@@ -170,12 +170,11 @@ public class FileSystem {
         short freeLength;
         while (i < iMax) {
             writtenLength = (short) (getWrittenLength((short) (i >> 2), (short) (iMax >> 2)) << 2);
-            if(secureRead){
-				Util.arrayFillNonAtomic(output, outputOffset, writtenLength, WRITTEN_BYTE);
+            if (secureRead) {
+                Util.arrayFillNonAtomic(output, outputOffset, writtenLength, WRITTEN_BYTE);
+            } else {
+                Util.arrayCopyNonAtomic(memory, i, output, outputOffset, writtenLength);
             }
-            else{
-				Util.arrayCopyNonAtomic(memory, i, output, outputOffset, writtenLength);
-            }            
             i += writtenLength;
             outputOffset += writtenLength;
             freeLength = (short) (getFreeLength((short) (i >> 2), (short) (iMax >> 2)) << 2);
@@ -185,7 +184,37 @@ public class FileSystem {
         }
 
         return (short) (outputOffset + length);
-    }    
+    }
+
+    /**
+     * Search for up to 4 consecutive bytes in memory.
+     *
+     * @param offset      Offset of the first word to test in memory (WORDS).
+     * @param length      Maximum number of consecutive words to test (WORDS).
+     * @param value       Value to search in memory range.
+     * @param valueOffset Offset of the first byte to test in value (BYTES).
+     * @param valueLength Length of the searched value (BYTES).
+     * @return Offset of the first occurrence of value in memory (WORDS).
+     */
+    public final short search(short offset, short length, byte[] value, short valueOffset, short valueLength) {
+        short lengthInBytes = (short) (length << 2);
+        if (valueLength > lengthInBytes || offset + length > memory.length || valueOffset + valueLength > value.length) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+
+        short index = (short) (offset << 2);
+        byte compareResult;
+        do {
+            compareResult = Util.arrayCompare(value, valueOffset, memory, (short) index, valueLength);
+            index += 4;
+        } while (index < lengthInBytes && compareResult != 0);
+
+        if (compareResult == 0) {
+            return (short) ((index - 4) >> 2);
+        } else {
+            return (short) -1;
+        }
+    }
 
     /**
      * Writes data in memory.
