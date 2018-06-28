@@ -2,7 +2,6 @@
 <USER>
 <PKG name="fr.ensicaen.smartcards.tb100like" aid="F0 54 42 31 30 30 4C 69 6B 65" major="1" minor="0">
 <APPLET aid="F0 54 42 31 30 30 4C 69 6B 65 00" instanceaid="" parameter="" authority="" privileges="" index="23728" name="TB100Like"/>
-<APPLET aid="F0 54 42 31 30 30 54 45 53 54 00" instanceaid="" parameter="" authority="" privileges="" index="6888" name="TB100Test"/>
 </PKG>
 <Libs/>
 </USER>
