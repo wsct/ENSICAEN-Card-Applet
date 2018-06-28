@@ -1,17 +1,40 @@
 package javacard.framework;
 
 public class Util {
-    public static short makeShort(byte left, byte right) {
-        return (short) (((left & 0xFF) << 8) | (right & 0xFF));
+    /**
+     * Concatenates the two parameter bytes to form a short value.
+     *
+     * @param b1 the first byte ( high order byte ).
+     * @param b2 the second byte ( low order byte )
+     * @return the short value the concatenated result
+     */
+    public static short makeShort(byte b1, byte b2) {
+        return (short) (((b1 & 0xFF) << 8) | (b2 & 0xFF));
     }
 
-    public static short getShort(byte[] buffer, short offset) {
-        return makeShort(buffer[offset], buffer[offset + 1]);
+    /**
+     * Concatenates two bytes in a byte array to form a short value.
+     *
+     * @param bArray byte array
+     * @param bOff   offset within byte array containing first byte (the high order byte)
+     * @return the short value the concatenated result
+     */
+    public static short getShort(byte[] bArray, short bOff) {
+        return makeShort(bArray[bOff], bArray[bOff + 1]);
     }
 
-    public static void arrayFillNonAtomic(byte[] buffer, short offset, short length, byte value) {
-        for (int i = 0; i < length; i++) {
-            buffer[offset + i] = value;
+    /**
+     * Fills the byte array (non-atomically) beginning at the specified position, for the specified length with the
+     * specified byte value.
+     *
+     * @param bArray the byte array
+     * @param bOff   offset within byte array to start filling bValue into
+     * @param bLen   byte length to be filled
+     * @param bValue the value to fill the byte array with
+     */
+    public static void arrayFillNonAtomic(byte[] bArray, short bOff, short bLen, byte bValue) {
+        for (int i = 0; i < bLen; i++) {
+            bArray[bOff + i] = bValue;
         }
     }
 
@@ -20,7 +43,7 @@ public class Util {
     }
 
     /**
-     * Compares an array from the speciﬁed source array, beginning at the speciﬁed position, with the speciﬁed
+     * Compares an array from the specified source array, beginning at the specified position, with the specified
      * position of the destination array from left to right. Returns the ternary result of the comparison : less
      * than(-1), equal(0) or greater than(1).
      *
@@ -31,12 +54,12 @@ public class Util {
      * @param length  byte length to be compared
      * @return
      */
-    public static final byte arrayCompare(byte[] src, short srcOff, byte[] dest, short destOff, short length) {
-        if (srcOff < 0 || destOff < 0 || length < 0 || srcOff + length > src.length || destOff + length > dest.length) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
+    public static byte arrayCompare(byte[] src, short srcOff, byte[] dest, short destOff, short length) {
         if (src == null || dest == null) {
             throw new NullPointerException();
+        }
+        if (srcOff < 0 || destOff < 0 || length < 0 || srcOff + length > src.length || destOff + length > dest.length) {
+            throw new ArrayIndexOutOfBoundsException();
         }
         short index = 0;
         int byteCompareResult;
@@ -48,6 +71,19 @@ public class Util {
         return (byte) byteCompareResult;
     }
 
-    public static void setShort(byte[] buffer, short i, short i1) {
+    /**
+     * Deposits the short value as two successive bytes at the specified offset in the byte array.
+     *
+     * @param bArray byte array
+     * @param bOff   offset within byte array to deposit the first byte (the high order byte)
+     * @param sValue the short value to set into array.
+     * @return bOff+2
+     */
+    public static short setShort(byte[] bArray, short bOff, short sValue) {
+        bArray[bOff] = (byte) ((sValue >> 8) & 0xFF);
+        bOff++;
+        bArray[bOff + 1] = (byte) (sValue & 0xFF);
+        bOff++;
+        return bOff;
     }
 }
