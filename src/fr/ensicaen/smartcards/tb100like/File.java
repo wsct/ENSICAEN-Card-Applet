@@ -29,7 +29,7 @@ public abstract class File {
     /**
      * Length of the header (BYTES, should be a multiple of 4).
      */
-    private short _headerLength;
+    protected short _headerLength;
 
     /**
      * Initializes a new file.
