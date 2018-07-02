@@ -139,13 +139,9 @@ public class FileSystem {
      */
     public short getWrittenLength(short from, short to) {
         short i = from;
-        // TODO
+
         while (i <= to && attributes[i] == ATTRIBUTE_WRITTEN) {
             i++;
-        }
-
-        if (i == (short) (to + 1)) {
-            i--;
         }
 
         return (short) (i - from);
@@ -202,10 +198,15 @@ public class FileSystem {
             throw new ArrayIndexOutOfBoundsException();
         }
 
+        short valueLengthInWords = (short) ((valueLength + 3) / 4);
+
         short index = (short) (offset << 2);
-        byte compareResult;
+        byte compareResult = -1;
         do {
-            compareResult = Util.arrayCompare(value, valueOffset, memory, (short) index, valueLength);
+            short x = getWrittenLength((short) (index / 4), (short) ((index + valueLength - 1) / 4));
+            if (x == valueLengthInWords) {
+                compareResult = Util.arrayCompare(value, valueOffset, memory, (short) index, valueLength);
+            }
             index += 4;
         } while (index < lengthInBytes && compareResult != 0);
 

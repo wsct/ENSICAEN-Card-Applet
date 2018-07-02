@@ -203,6 +203,17 @@ class FileSystemTest {
     }
 
     @Test
+    void searchNotWrittenBytesInMemory() {
+        FileSystem fileSystem = new FileSystem((short) 0x100, (byte) 2, (byte) 3);
+
+        byte[] aValue = new byte[]{
+                FileSystem.FREE_BYTE, FileSystem.FREE_BYTE, FileSystem.FREE_BYTE, FileSystem.FREE_BYTE,
+                (byte) '3', (byte) '4', (byte) '5', (byte) '6'
+        };
+        assertEquals((short) -1, fileSystem.search((short) 0, (short) 0x100, aValue, (short) 2, (short) 2));
+    }
+
+    @Test
     void secureReadBytesInMemory() {
         FileSystem fileSystem = new FileSystem((short) 0x100, (byte) 2, (byte) 3);
         byte[] source = new byte[]{
