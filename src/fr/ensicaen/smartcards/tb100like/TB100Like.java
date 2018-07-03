@@ -91,12 +91,12 @@ public class TB100Like extends Applet {
      *
      * @param apdu The incoming APDU object
      */
-    private void processAppletSelection(APDU apdu) {
+    protected void processAppletSelection(APDU apdu) {
         byte[] buffer = apdu.getBuffer();
 
         _masterFile.getHeader(buffer, (short) 0);
 
-        apdu.setOutgoingAndSend((short) 0, _masterFile.getHeaderSize());
+        apdu.setOutgoingAndSend((short) 0, _masterFile._headerLength);
     }
 
     /**
