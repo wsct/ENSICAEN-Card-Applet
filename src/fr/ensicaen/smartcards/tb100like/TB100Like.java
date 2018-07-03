@@ -12,7 +12,7 @@ import javacard.security.*;
  */
 public class TB100Like extends Applet {
 
-    private final DedicatedFile _masterFile;
+    final DedicatedFile _masterFile;
     private HeaderParser _headerParser;
 
     /**
@@ -391,7 +391,7 @@ public class TB100Like extends Applet {
             ISOException.throwIt(ISO7816.SW_FILE_NOT_FOUND);
         }
 
-        if (fid == _currentEF.getFileId()) {
+        if (_currentEF != null && fid == _currentEF.getFileId()) {
             _currentEF = null;
         }
     }
@@ -399,7 +399,7 @@ public class TB100Like extends Applet {
     /**
      * Verify that offset+length fit in current EF
      */
-    void verifyOutOfFile(short offset, short length) {
+    private void verifyOutOfFile(short offset, short length) {
         // Check if there is a current EF
         if (_currentEF == null) {
             ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
