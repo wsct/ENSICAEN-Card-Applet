@@ -91,7 +91,7 @@ public class TB100Like extends Applet {
      *
      * @param apdu The incoming APDU object
      */
-    protected void processAppletSelection(APDU apdu) {
+    void processAppletSelection(APDU apdu) {
         byte[] buffer = apdu.getBuffer();
 
         _masterFile.getHeader(buffer, (short) 0);
@@ -116,9 +116,9 @@ public class TB100Like extends Applet {
      *
      * @param apdu The incoming APDU object.
      */
-    private void processSelect(APDU apdu) {
+    void processSelect(APDU apdu) {
         byte[] buffer = apdu.getBuffer();
-        short bufferLength = apdu.setIncomingAndReceive();
+        apdu.setIncomingAndReceive();
 
         short udcOffset = APDUHelpers.getOffsetCdata(apdu);
         short lc = APDUHelpers.getIncomingLength(apdu);
@@ -171,7 +171,7 @@ public class TB100Like extends Applet {
      *
      * @param apdu The incoming APDU object
      */
-    private void processReadBinary(APDU apdu) {
+    void processReadBinary(APDU apdu) {
         short le = apdu.setOutgoing(); // in BYTES
         short wordCount = (short) ((le + 3) / 4);
         byte[] buffer = JCSystem.makeTransientByteArray((short) (wordCount * 4), JCSystem.CLEAR_ON_DESELECT);
@@ -220,7 +220,7 @@ public class TB100Like extends Applet {
      *
      * @param apdu The incoming APDU object
      */
-    private void processWriteBinary(APDU apdu) {
+    void processWriteBinary(APDU apdu) {
         // TODO: check ==> security of current EF
 
         byte[] apduBuffer = apdu.getBuffer();
@@ -267,7 +267,7 @@ public class TB100Like extends Applet {
      *
      * @param apdu The incoming APDU object
      */
-    private void processErase(APDU apdu) {
+    void processErase(APDU apdu) {
         // TODO: check ==> security of current EF
 
         byte[] apduBuffer = apdu.getBuffer();
@@ -296,7 +296,7 @@ public class TB100Like extends Applet {
      *
      * @param apdu The incoming APDU object
      */
-    private void processGenerateRandom(APDU apdu) {
+    void processGenerateRandom(APDU apdu) {
 
         byte[] apduBuffer = apdu.getBuffer();
         short le = apdu.setOutgoing();
@@ -329,7 +329,7 @@ public class TB100Like extends Applet {
      *
      * @param apdu The incoming APDU object.
      */
-    private void processCreateFile(APDU apdu) {
+    void processCreateFile(APDU apdu) {
         byte[] buffer = apdu.getBuffer();
         apdu.setIncomingAndReceive();
 
@@ -374,7 +374,7 @@ public class TB100Like extends Applet {
      *
      * @param apdu The incoming APDU object.
      */
-    private void processDeleteFile(APDU apdu) {
+    void processDeleteFile(APDU apdu) {
         byte[] buffer = apdu.getBuffer();
         short bufferLength = apdu.setIncomingAndReceive();
 
@@ -399,7 +399,7 @@ public class TB100Like extends Applet {
     /**
      * Verify that offset+length fit in current EF
      */
-    private void verifyOutOfFile(short offset, short length) {
+    void verifyOutOfFile(short offset, short length) {
         // Check if there is a current EF
         if (_currentEF == null) {
             ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
