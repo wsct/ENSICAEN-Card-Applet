@@ -82,7 +82,7 @@ public class Util {
     public static short setShort(byte[] bArray, short bOff, short sValue) {
         bArray[bOff] = (byte) ((sValue >> 8) & 0xFF);
         bOff++;
-        bArray[bOff + 1] = (byte) (sValue & 0xFF);
+        bArray[bOff] = (byte) (sValue & 0xFF);
         bOff++;
         return bOff;
     }
