@@ -95,7 +95,7 @@ public class ElementaryFile extends File {
      * @return Offset of the first occurrence of value in file body (WORDS).
      */
     public final short search(short offset, byte[] value, short valueOffset, short valueLength) {
-        if (getHeaderSize() + offset > _length || offset < 0) {
+        if ((short) (getHeaderSize() + offset) > _length || offset < 0) {
             throw new ArrayIndexOutOfBoundsException();
         }
 

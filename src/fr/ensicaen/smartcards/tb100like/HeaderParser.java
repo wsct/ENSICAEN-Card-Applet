@@ -39,21 +39,21 @@ public class HeaderParser {
 
         byte qualifier = buffer[offset];
         if ((qualifier & FILETYPE_DF) == FILETYPE_DF) {
-            if (length - offset < 8) {
+            if ((short) (length - offset) < 8) {
                 return false;
             }
             fileType = FILETYPE_DF;
             headerLength = 8;
             bodyLength = (short) (Util.getShort(buffer, (short) (offset + 2)) - 2);
         } else if ((qualifier & FILETYPE_EFWZ) == FILETYPE_EFWZ) {
-            if (length - offset < 8) {
+            if ((short) (length - offset) < 8) {
                 return false;
             }
             fileType = FILETYPE_EFWZ;
             headerLength = 8;
             bodyLength = (short) (Util.getShort(buffer, (short) (offset + 2)) - 2);
         } else if ((qualifier & FILETYPE_EFSZ) == FILETYPE_EFSZ) {
-            if (length - offset < 4) {
+            if ((short) (length - offset) < 4) {
                 return false;
             }
             fileType = FILETYPE_EFSZ;

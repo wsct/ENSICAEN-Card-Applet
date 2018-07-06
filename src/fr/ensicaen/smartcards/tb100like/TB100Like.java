@@ -413,7 +413,7 @@ public class TB100Like extends Applet {
         }
 
         // check if offset+length <= bodyLength
-        if (offset + length > bodyLength) {
+        if ((short) (offset + length) > bodyLength) {
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
         }
 

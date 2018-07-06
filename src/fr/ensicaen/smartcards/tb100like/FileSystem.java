@@ -194,7 +194,7 @@ public class FileSystem {
      */
     public final short search(short offset, short length, byte[] value, short valueOffset, short valueLength) {
         short lengthInBytes = (short) (length << 2);
-        if (valueLength > lengthInBytes || offset + length > memory.length || valueOffset + valueLength > value.length) {
+        if (valueLength > lengthInBytes || (short) (offset + length) > memory.length || (short) (valueOffset + valueLength) > value.length) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
