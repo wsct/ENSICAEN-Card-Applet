@@ -13,7 +13,7 @@ import static org.mockito.Mockito.*;
 public class TB100LikeTest {
 
     @Test
-    void processAppletSelection() {
+    void appletSelection() {
         ApduBuffer buffer = new ApduBuffer("00A404000B");
         APDU apdu = mock(APDU.class);
         when(apdu.getBuffer()).thenReturn(buffer.get());
@@ -34,7 +34,7 @@ public class TB100LikeTest {
     }
 
     @Test
-    void processCreateDedicatedFile() {
+    void createDedicatedFile() {
         ApduBuffer buffer = new ApduBuffer("00E0001308");
         APDU apdu = mock(APDU.class);
         when(apdu.getBuffer()).thenReturn(buffer.get());
@@ -51,7 +51,7 @@ public class TB100LikeTest {
     }
 
     @Test
-    void processCreateElementaryFile() {
+    void createElementaryFile() {
         ApduBuffer buffer = new ApduBuffer("00E0004008");
         APDU apdu = mock(APDU.class);
         when(apdu.getBuffer()).thenReturn(buffer.get());
@@ -68,7 +68,7 @@ public class TB100LikeTest {
     }
 
     @Test
-    void processDeleteDedicatedFile() {
+    void deleteDedicatedFile() {
         ApduBuffer buffer = new ApduBuffer("00E4000002");
         APDU apdu = mock(APDU.class);
         when(apdu.getBuffer()).thenReturn(buffer.get());
@@ -87,7 +87,7 @@ public class TB100LikeTest {
     }
 
     @Test
-    void processMasterFileSelection() {
+    void masterFileSelection() {
         ApduBuffer buffer = new ApduBuffer("00A4000002");
         APDU apdu = mock(APDU.class);
         when(apdu.getBuffer()).thenReturn(buffer.get());
