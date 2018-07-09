@@ -56,6 +56,10 @@ public class TB100Like extends Applet {
             case ISO7816.INS_SELECT:
                 processSelect(apdu);
                 break;
+                
+			case Constants.INS_FSEARCH:
+				processFSearch(apdu);
+				break;
 
             case Constants.INS_READ_BINARY:
                 processReadBinary(apdu);
@@ -155,6 +159,60 @@ public class TB100Like extends Applet {
         file.getHeader(buffer, (short) 4);
         apdu.setOutgoingAndSend((short) 0, (short) (4 + (headerSize << 2)));
     }
+
+/**
+     * Process FSEARCH instruction (CC2)
+     *
+     * looking for empty word (CC2)
+     * <p>
+     * C-APDU: <code>00 B0 {P1-P2: offset} 04</code>
+     * </p>
+     * <p>
+     * R-APDU when an EF is selected: <code>{offset} {number of word in current EF}</code>
+     * </p>
+     * <p>
+     * R-APDU when no EF is selected: <code>{offset} {number of word in current DF}</code>
+     * </p>
+     *
+     * @param apdu The incoming APDU object
+     */
+	void processFSearch(APDU apdu){
+		
+		// get offset
+		byte[] buffer = apdu.getBuffer();
+		short offset = Util.getShort(buffer, ISO7816.OFFSET_P1); // in WORDS
+		
+		//get le
+		short le = apdu.setOutgoing(); // in BYTES
+		if(le != 4){
+			ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+		}
+		
+		short wordCount = 0;
+		short offsetFound = offset;
+		
+		// check that there is a current EF
+		if (_currentEF != null) {
+			wordCount = (short) (_currentEF.getLength() - _currentEF.getHeaderSize());
+			while(!(_currentEF.isAvailable(offsetFound,(short)1) || offsetFound==wordCount)){
+				offsetFound++;
+			}
+			if(offsetFound == wordCount) {
+				ISOException.throwIt(Constants.SW_DATA_NOT_FOUND);				
+			}
+		}
+		else {
+			wordCount = (short) (_currentDF.getLength() - _currentDF.getHeaderSize());			
+			// TODO: manage fsearch while in a DF
+		}
+		// copy answer in buffer
+		Util.setShort(buffer, (short)0, offsetFound);
+		Util.setShort(buffer, (short)2, wordCount);
+		// and send it!
+        apdu.setOutgoingLength((short) 4);
+		apdu.sendBytes((short) 0, (short) 4);
+	}
+
 
     /**
      * Process READ BINARY instruction (CC2)
