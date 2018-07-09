@@ -165,7 +165,7 @@ public class FileSystem {
         short writtenLength;
         short freeLength;
         while (i < iMax) {
-            writtenLength = (short) (getWrittenLength((short) (i >> 2), (short) (iMax >> 2)) << 2);
+            writtenLength = (short) (getWrittenLength((short) (i >> 2), (short) ((short) (iMax >> 2) - 1)) << 2);
             if (secureRead) {
                 Util.arrayFillNonAtomic(output, outputOffset, writtenLength, WRITTEN_BYTE);
             } else {
