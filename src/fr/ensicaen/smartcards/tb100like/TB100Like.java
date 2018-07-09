@@ -197,13 +197,32 @@ public class TB100Like extends Applet {
 			while(!(_currentEF.isAvailable(offsetFound,(short)1) || offsetFound==wordCount)){
 				offsetFound++;
 			}
-			if(offsetFound == wordCount) {
-				ISOException.throwIt(Constants.SW_DATA_NOT_FOUND);				
-			}
 		}
 		else {
-			wordCount = (short) (_currentDF.getLength() - _currentDF.getHeaderSize());			
-			// TODO: manage fsearch while in a DF
+			wordCount = (short) (_currentDF.getLength() - _currentDF.getHeaderSize());
+			
+			byte childCount = _currentDF.getChildCount();
+			if( childCount > 0){
+				byte iChild = 0;
+				short begin = 0;
+				short end = 0 ;
+				do {
+					File currentFile = _currentDF.getChild(iChild);	
+					begin = (short) (currentFile._inParentBodyOffset << 2 );
+					end = (short) (begin + currentFile._length);
+					
+					if(offsetFound >= begin) {
+						offsetFound = end;
+					}
+					iChild++;
+				} while(iChild<childCount && offsetFound > begin );
+			}
+			
+		}
+		
+		// check that there is still some empty space
+		if(offsetFound == wordCount) {
+			ISOException.throwIt(Constants.SW_DATA_NOT_FOUND);				
 		}
 		// copy answer in buffer
 		Util.setShort(buffer, (short)0, offsetFound);

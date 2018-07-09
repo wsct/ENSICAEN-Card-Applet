@@ -208,4 +208,13 @@ public class DedicatedFile extends File {
     public final boolean hasChild(byte nth) {
         return nth >= 0 && nth < _childrenCount;
     }
+    
+    
+    /**
+     *Returns the number of children
+     */
+    public final byte getChildCount(){
+	    return _childrenCount;
+    }
+    
 }
