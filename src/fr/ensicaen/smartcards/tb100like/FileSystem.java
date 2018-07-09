@@ -198,12 +198,12 @@ public class FileSystem {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        short valueLengthInWords = (short) ((valueLength + 3) / 4);
+        short valueLengthInWords = (short) ((short) (valueLength + 3) / 4);
 
         short index = (short) (offset << 2);
         byte compareResult = -1;
         do {
-            short x = getWrittenLength((short) (index / 4), (short) ((index + valueLength - 1) / 4));
+            short x = getWrittenLength((short) (index / 4), (short) ((short) (index + valueLength - 1) / 4));
             if (x == valueLengthInWords) {
                 compareResult = Util.arrayCompare(value, valueOffset, memory, (short) index, valueLength);
             }
@@ -211,7 +211,7 @@ public class FileSystem {
         } while (index < lengthInBytes && compareResult != 0);
 
         if (compareResult == 0) {
-            return (short) ((index - 4) >> 2);
+            return (short) ((short) (index - 4) >> 2);
         } else {
             return (short) -1;
         }

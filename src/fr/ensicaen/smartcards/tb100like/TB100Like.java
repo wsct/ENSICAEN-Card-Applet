@@ -231,7 +231,7 @@ public class TB100Like extends Applet {
      */
     void processReadBinary(APDU apdu) {
         short le = apdu.setOutgoing(); // in BYTES
-        short wordCount = (short) ((le + 3) / 4);
+        short wordCount = (short) ((short) (le + 3) / 4);
         byte[] buffer = JCSystem.makeTransientByteArray((short) (wordCount * 4), JCSystem.CLEAR_ON_DESELECT);
 
         if (_currentEF != null) {
@@ -286,7 +286,7 @@ public class TB100Like extends Applet {
 
         short offset = Util.getShort(apduBuffer, ISO7816.OFFSET_P1); // in WORDS
         short length = APDUHelpers.getIncomingLength(apdu); // in BYTES
-        short wordCount = (short) ((length + 3) / 4); // length in WORDS
+        short wordCount = (short) ((short) (length + 3) / 4); // length in WORDS
 
         // availability check
         verifyOutOfFile(offset, wordCount);
