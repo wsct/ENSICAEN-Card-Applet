@@ -14,6 +14,7 @@ public class TB100Like extends Applet {
 
     final DedicatedFile _masterFile;
     private HeaderParser _headerParser;
+    private byte[] _transientData;
 
     /**
      * Currently selected DF.
@@ -39,6 +40,7 @@ public class TB100Like extends Applet {
         _headerParser = new HeaderParser();
         _currentDF = _masterFile;
         _currentEF = null;
+        _transientData = JCSystem.makeTransientByteArray((short) 1, JCSystem.CLEAR_ON_RESET);
     }
 
     /**
@@ -50,43 +52,45 @@ public class TB100Like extends Applet {
             return;
         }
 
+		verifyResetSinceLastCall();
+
         byte[] apduBuffer = apdu.getBuffer();
 
         switch (apduBuffer[ISO7816.OFFSET_INS]) {
-            case ISO7816.INS_SELECT:
-                processSelect(apdu);
-                break;
-                
-			case Constants.INS_FSEARCH:
-				processFSearch(apdu);
-				break;
+        case ISO7816.INS_SELECT:
+            processSelect(apdu);
+            break;
 
-            case Constants.INS_READ_BINARY:
-                processReadBinary(apdu);
-                break;
+        case Constants.INS_FSEARCH:
+            processFSearch(apdu);
+            break;
 
-            case Constants.INS_WRITE_BINARY:
-                processWriteBinary(apdu);
-                break;
+        case Constants.INS_READ_BINARY:
+            processReadBinary(apdu);
+            break;
 
-            case Constants.INS_ERASE:
-                processErase(apdu);
-                break;
+        case Constants.INS_WRITE_BINARY:
+            processWriteBinary(apdu);
+            break;
 
-            case Constants.INS_GENERATE_RANDOM:
-                processGenerateRandom(apdu);
-                break;
+        case Constants.INS_ERASE:
+            processErase(apdu);
+            break;
 
-            case Constants.INS_CREATE_FILE:
-                processCreateFile(apdu);
-                break;
+        case Constants.INS_GENERATE_RANDOM:
+            processGenerateRandom(apdu);
+            break;
 
-            case Constants.INS_DELETE_FILE:
-                processDeleteFile(apdu);
-                break;
+        case Constants.INS_CREATE_FILE:
+            processCreateFile(apdu);
+            break;
 
-            default:
-                ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
+        case Constants.INS_DELETE_FILE:
+            processDeleteFile(apdu);
+            break;
+
+        default:
+            ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
         }
     }
 
@@ -96,6 +100,9 @@ public class TB100Like extends Applet {
      * @param apdu The incoming APDU object
      */
     void processAppletSelection(APDU apdu) {
+        _currentDF = _masterFile;
+        _currentEF = null;
+
         byte[] buffer = apdu.getBuffer();
 
         _masterFile.getHeader(buffer, (short) 0);
@@ -160,7 +167,7 @@ public class TB100Like extends Applet {
         apdu.setOutgoingAndSend((short) 0, (short) (4 + (headerSize << 2)));
     }
 
-/**
+    /**
      * Process FSEARCH instruction (CC2)
      *
      * looking for empty word (CC2)
@@ -176,61 +183,61 @@ public class TB100Like extends Applet {
      *
      * @param apdu The incoming APDU object
      */
-	void processFSearch(APDU apdu){
-		
-		// get offset
-		byte[] buffer = apdu.getBuffer();
-		short offset = Util.getShort(buffer, ISO7816.OFFSET_P1); // in WORDS
-		
-		//get le
-		short le = apdu.setOutgoing(); // in BYTES
-		if(le != 4){
-			ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
-		}
-		
-		short wordCount = 0;
-		short offsetFound = offset;
-		
-		// check that there is a current EF
-		if (_currentEF != null) {
-			wordCount = (short) (_currentEF.getLength() - _currentEF.getHeaderSize());
-			while(!(_currentEF.isAvailable(offsetFound,(short)1) || offsetFound==wordCount)){
-				offsetFound++;
-			}
+    void processFSearch(APDU apdu) {
+
+        // get offset
+        byte[] buffer = apdu.getBuffer();
+        short offset = Util.getShort(buffer, ISO7816.OFFSET_P1); // in WORDS
+
+        // get le
+        short le = apdu.setOutgoing(); // in BYTES
+        if (le != 4) {
+            ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+        }
+
+        short wordCount = 0;
+        short offsetFound = offset;
+
+        // check that there is a current EF
+        if (_currentEF != null) {
+            wordCount = (short) (_currentEF.getLength() - _currentEF.getHeaderSize());
+            while (!(_currentEF.isAvailable(offsetFound, (short) 1) || offsetFound == wordCount)) {
+                offsetFound++;
+            }
 		}
 		else {
-			wordCount = (short) (_currentDF.getLength() - _currentDF.getHeaderSize());
-			
-			byte childCount = _currentDF.getChildCount();
-			if( childCount > 0){
-				byte iChild = 0;
-				short begin = 0;
-				short end = 0 ;
-				do {
-					File currentFile = _currentDF.getChild(iChild);	
-					begin = (short) (currentFile._inParentBodyOffset << 2 );
-					end = (short) (begin + currentFile._length);
-					
-					if(offsetFound >= begin) {
-						offsetFound = end;
-					}
-					iChild++;
-				} while(iChild<childCount && offsetFound > begin );
-			}
-			
-		}
-		
-		// check that there is still some empty space
-		if(offsetFound == wordCount) {
-			ISOException.throwIt(Constants.SW_DATA_NOT_FOUND);				
-		}
-		// copy answer in buffer
-		Util.setShort(buffer, (short)0, offsetFound);
-		Util.setShort(buffer, (short)2, wordCount);
-		// and send it!
+            wordCount = (short) (_currentDF.getLength() - _currentDF.getHeaderSize());
+
+            byte childCount = _currentDF.getChildCount();
+            if (childCount > 0) {
+                byte iChild = 0;
+                short begin = 0;
+                short end = 0;
+                do {
+                    File currentFile = _currentDF.getChild(iChild);
+                    begin = (short) (currentFile._inParentBodyOffset << 2);
+                    end = (short) (begin + currentFile._length);
+
+                    if (offsetFound >= begin) {
+                        offsetFound = end;
+                    }
+                    iChild++;
+                } while (iChild < childCount && offsetFound > begin);
+            }
+
+        }
+
+        // check that there is still some empty space
+        if (offsetFound == wordCount) {
+            ISOException.throwIt(Constants.SW_DATA_NOT_FOUND);
+        }
+        // copy answer in buffer
+        Util.setShort(buffer, (short) 0, offsetFound);
+        Util.setShort(buffer, (short) 2, wordCount);
+        // and send it!
         apdu.setOutgoingLength((short) 4);
-		apdu.sendBytes((short) 0, (short) 4);
-	}
+        apdu.sendBytes((short) 0, (short) 4);
+    }
 
 
     /**
@@ -427,15 +434,15 @@ public class TB100Like extends Applet {
         File file = null;
 
         switch (_headerParser.fileType) {
-            case HeaderParser.FILETYPE_DF:
-                file = _currentDF.createDedicatedFile(offset, size, buffer, headerOffset, headerLength);
-                break;
-            case HeaderParser.FILETYPE_EFSZ:
-            case HeaderParser.FILETYPE_EFWZ:
-                file = _currentDF.createElementaryFile(offset, size, buffer, headerOffset, headerLength);
-                break;
-            default:
-                ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+        case HeaderParser.FILETYPE_DF:
+            file = _currentDF.createDedicatedFile(offset, size, buffer, headerOffset, headerLength);
+            break;
+        case HeaderParser.FILETYPE_EFSZ:
+        case HeaderParser.FILETYPE_EFWZ:
+            file = _currentDF.createElementaryFile(offset, size, buffer, headerOffset, headerLength);
+            break;
+        default:
+            ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
         }
 
         if (file == null) {
@@ -496,4 +503,11 @@ public class TB100Like extends Applet {
 
     }
 
+	private void verifyResetSinceLastCall() {
+		if (_transientData[0] != (short) -1) {
+			_transientData[0] = (short) -1;
+			_currentDF = _masterFile;
+			_currentEF = null;
+		}
+	}
 }
