@@ -69,6 +69,14 @@ public class TB100Like extends Applet {
                 processWriteBinary(apdu);
                 break;
 
+            case Constants.INS_GET_DATA:
+                processGetData(apdu);
+                break;
+
+            case Constants.INS_PUT_DATA:
+                processPutData(apdu);
+                break;
+
             case Constants.INS_ERASE:
                 processErase(apdu);
                 break;
@@ -160,7 +168,7 @@ public class TB100Like extends Applet {
         apdu.setOutgoingAndSend((short) 0, (short) (4 + (headerSize << 2)));
     }
 
-/**
+	/**
      * Process FSEARCH instruction (CC2)
      *
      * looking for empty word (CC2)
@@ -282,6 +290,52 @@ public class TB100Like extends Applet {
 
     }
 
+	/**
+     * Process GET DATA instruction (CC2)
+     *
+     * <p>
+     * C-APDU: <code>00 CA 00 {P2: tag} {Le}</code>
+     * </p>     
+     * <p>
+     * <code>{Data in EF at tag}</code>
+     * </p>
+     *
+     * @param apdu The incoming APDU object
+     */
+	void processGetData(APDU apdu) {
+		// lots of copy/paste from read binary ==> refactoring possible ;)
+		byte[] apduBuffer = apdu.getBuffer();
+		short le = apdu.setOutgoing(); // in BYTES
+		short wordCount = (short) ((short) (le + 5) / 4); // length in WORDS // 5 = 3 + 2 (1 tag + 1 length)
+		
+		byte[] buffer = JCSystem.makeTransientByteArray( (short) (wordCount * 4), JCSystem.CLEAR_ON_DESELECT);
+		
+		if (_currentEF != null) {
+			// find if tag exits
+			buffer[0] = apduBuffer[ISO7816.OFFSET_P2];						
+			short tagPosition = _currentEF.search((short) 0, buffer, (short) 0, (short) 1);
+			if(tagPosition == -1){
+				ISOException.throwIt(Constants.SW_DATA_NOT_FOUND);
+			}
+			// get length
+			_currentEF.read(tagPosition, buffer, (short) 0, (short) 1, false);
+			byte length = buffer[1];
+			if(le != length){
+				ISOException.throwIt((short)(0x6C00 + length) );
+			}
+			
+			//read !
+			_currentEF.read(tagPosition , buffer, (short) 0, wordCount, _headerParser.fileType == HeaderParser.FILETYPE_EFSZ);
+			// and send data!
+			apdu.setOutgoingLength(le);
+			apdu.sendBytesLong(buffer, (short) 2, le);
+		}
+		else {
+			ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+		}
+		
+	}
+
     /**
      * Process WRITE BINARY instruction (CC3)
      *
@@ -299,7 +353,7 @@ public class TB100Like extends Applet {
      */
     void processWriteBinary(APDU apdu) {
         // TODO: check ==> security of current EF
-
+        
         byte[] apduBuffer = apdu.getBuffer();
         apdu.setIncomingAndReceive();
 
@@ -307,27 +361,79 @@ public class TB100Like extends Applet {
         short length = APDUHelpers.getIncomingLength(apdu); // in BYTES
         short wordCount = (short) ((short) (length + 3) / 4); // length in WORDS
 
-        // availability check
-        verifyOutOfFile(offset, wordCount);
-        if (!_currentEF.isAvailable(offset, wordCount)) {
-            ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
-        }
+		// availability check
+		verifyOutOfFile(offset, wordCount);
+		if (!_currentEF.isAvailable(offset, wordCount)) {
+			ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+		}
 
-        // copy data in a buffer
-        byte[] buffer = JCSystem.makeTransientByteArray((short) (wordCount * 4), JCSystem.CLEAR_ON_DESELECT);
-        short udcOffset = APDUHelpers.getOffsetCdata(apdu);
-        Util.arrayCopyNonAtomic(apduBuffer, udcOffset, buffer, (short) 0, length);
+		// copy data in a buffer
+		byte[] buffer = JCSystem.makeTransientByteArray((short) (wordCount * 4), JCSystem.CLEAR_ON_DESELECT);
+		short udcOffset = APDUHelpers.getOffsetCdata(apdu);
+		Util.arrayCopyNonAtomic(apduBuffer, udcOffset, buffer, (short) 0, length);
 
-        // complete words with FF in buffer
-        short iMax = (short) (wordCount * 4);
-        for (short i = length; i < iMax; i++) {
-            buffer[i] = (byte) 0xFF;
-        }
+		// complete words with FF in buffer
+		short iMax = (short) (wordCount * 4);
+		for (short i = length; i < iMax; i++) {
+			buffer[i] = (byte) 0xFF;
+		}
 
-        // and write data to file
-        _currentEF.write(buffer, (short) 0, offset, wordCount);
+		// and write data to file
+		_currentEF.write(buffer, (short) 0, offset, wordCount);
 
     }
+
+	/**
+     * Process PUT DATA instruction (CC3)
+     *
+     * <p>
+     * C-APDU: <code>00 DA 00 {P2: Tag} {Lc} {data} </code>
+     * </p>
+     * <p>
+     * offset: offset of first word of the file coded by P1 P2 (WORDS) to be written.
+     * </p>
+     * <p>
+     * data: data to be written in file.
+     * </p>
+     *
+     * @param apdu The incoming APDU object
+     */
+	void processPutData(APDU apdu){
+		// TODO: check ==> security of current EF
+		// lots of copy/paste from write binary ==> refactoring possible ;)
+		// and also some from GET DATA ^^
+		
+		byte[] apduBuffer = apdu.getBuffer();
+        apdu.setIncomingAndReceive();
+		
+		short length = APDUHelpers.getIncomingLength(apdu); // in BYTES
+        short wordCount = (short) ((short) (length + 5) / 4); // length in WORDS // 5 = 3 + 2 (1 tag + 1 length)
+        
+                
+        byte[] tmpBuffer = JCSystem.makeTransientByteArray((short) 1, JCSystem.CLEAR_ON_DESELECT);
+		tmpBuffer[0] = apduBuffer[ISO7816.OFFSET_P2];
+			
+		// find if tag exits
+		short tagPosition = _currentEF.search((short) 0, tmpBuffer, (short) 0, (short) 1);
+		if(tagPosition == -1){
+			tagPosition = 0; // todo : change to find a suitable position
+		}        
+        verifyOutOfFile(tagPosition, wordCount);
+        
+        // copy data in a buffer
+        byte[] buffer = JCSystem.makeTransientByteArray((short) (wordCount * 4), JCSystem.CLEAR_ON_DESELECT);
+        buffer[0] = apduBuffer[ISO7816.OFFSET_P2];
+        buffer[1] = (byte) length;
+        short udcOffset = APDUHelpers.getOffsetCdata(apdu);
+        Util.arrayCopyNonAtomic(apduBuffer, udcOffset, buffer, (short) 2, length);
+
+
+        // and write data to file
+        _currentEF.write(buffer, (short) 0, tagPosition, wordCount);
+        
+        
+        
+	}
 
     /**
      * Process ERASE instruction (CC3)
