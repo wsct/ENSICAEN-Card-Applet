@@ -7,3 +7,5 @@ LocalJChomeProperty.xml
 bin/
 out/
 .idea/workspace.xml
+ant-javacard.jar
+*.cap

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="TB100Like Applet" default="dist" basedir=".">
+
+    <description>Builds the project. </description>
+
+    <!-- Download  -->
+    <get src="https://github.com/martinpaljak/ant-javacard/releases/download/18.09.25/ant-javacard.jar" dest="." skipexisting="true"/>
+
+    <taskdef name="javacard" classname="pro.javacard.ant.JavaCard" classpath="ant-javacard.jar"/>
+
+    <property name="JC_KIT" value="..\java_card_kit-2_2_1"/>
+
+    <target name="dist" description="Generate the applet">
+        <!-- Create the javacard applet -->
+        <tstamp/>
+        <javacard>
+            <cap aid="F0:54:42:31:30:30:4C:69:6B:65" output="TB100Like.cap" sources="src/fr/ensicaen/smartcards/tb100like" version="1.0" jckit="${JC_KIT}">
+                <applet class="fr.ensicaen.smartcards.tb100like.TB100Like" aid="F0:54:42:31:30:30:4C:69:6B:65:00:01" />
+            </cap>
+        </javacard>
+    </target>
+
+    <target name="clean" description="clean up">
+        <!-- Delete the built applet -->
+        <delete dir="TB100Like.cap"/>
+    </target>
+
+</project>
