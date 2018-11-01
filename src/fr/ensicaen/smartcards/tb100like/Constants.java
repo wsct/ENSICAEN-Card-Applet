@@ -9,14 +9,16 @@ package fr.ensicaen.smartcards.tb100like;
  */
 public final class Constants {
 
+	public static final byte INS_GENERATE_RANDOM = (byte) 0xC4;
 	public static final byte INS_CREATE_FILE = (byte) 0xE0;
 	public static final byte INS_DELETE_FILE = (byte) 0xE4;
-	public static final byte INS_ERASE = (byte) 0x0E;
-	public static final byte INS_GENERATE_RANDOM = (byte) 0xC4;
-	public static final byte INS_READ_BINARY = (byte) 0xB0;
 	public static final byte INS_SELECT = (byte) 0xA4;
-	public static final byte INS_WRITE_BINARY = (byte) 0xD0;
 	public static final byte INS_FSEARCH = (byte) 0xA0;
+	public static final byte INS_READ_BINARY = (byte) 0xB0;
+	public static final byte INS_WRITE_BINARY = (byte) 0xD0;	
+	public static final byte INS_ERASE = (byte) 0x0E;
+	public static final byte INS_GET_DATA = (byte) 0xCA;
+	public static final byte INS_PUT_DATA = (byte) 0xDA;	
 
 	// TODO Remove these constants
 	public static final byte P1_CREATE_FILE_DF = (byte) 0x01;

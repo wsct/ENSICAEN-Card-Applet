@@ -4,6 +4,7 @@ public class ISO7816 {
     public static final byte INS_SELECT = (byte) 0xA4;
     public static final short OFFSET_INS = 1;
     public static final short OFFSET_P1 = 2;
+    public static final short OFFSET_P2 = 3;
     public static final short OFFSET_LC = 4;
     public static final short OFFSET_CDATA = 5;
 

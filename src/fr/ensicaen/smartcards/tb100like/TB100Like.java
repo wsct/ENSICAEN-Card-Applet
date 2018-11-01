@@ -52,45 +52,54 @@ public class TB100Like extends Applet {
             return;
         }
 
-		verifyResetSinceLastCall();
+        verifyResetSinceLastCall();
 
         byte[] apduBuffer = apdu.getBuffer();
 
         switch (apduBuffer[ISO7816.OFFSET_INS]) {
-        case ISO7816.INS_SELECT:
-            processSelect(apdu);
-            break;
 
-        case Constants.INS_FSEARCH:
-            processFSearch(apdu);
-            break;
+            case ISO7816.INS_SELECT:
+                processSelect(apdu);
+                break;
 
-        case Constants.INS_READ_BINARY:
-            processReadBinary(apdu);
-            break;
+            case Constants.INS_FSEARCH:
+                processFSearch(apdu);
+                break;
 
-        case Constants.INS_WRITE_BINARY:
-            processWriteBinary(apdu);
-            break;
+            case Constants.INS_READ_BINARY:
+                processReadBinary(apdu);
+                break;
 
-        case Constants.INS_ERASE:
-            processErase(apdu);
-            break;
+            case Constants.INS_WRITE_BINARY:
+                processWriteBinary(apdu);
+                break;
 
-        case Constants.INS_GENERATE_RANDOM:
-            processGenerateRandom(apdu);
-            break;
+            case Constants.INS_GET_DATA:
+                processGetData(apdu);
+                break;
 
-        case Constants.INS_CREATE_FILE:
-            processCreateFile(apdu);
-            break;
+            case Constants.INS_PUT_DATA:
+                processPutData(apdu);
+                break;
 
-        case Constants.INS_DELETE_FILE:
-            processDeleteFile(apdu);
-            break;
+            case Constants.INS_ERASE:
+                processErase(apdu);
+                break;
 
-        default:
-            ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
+            case Constants.INS_GENERATE_RANDOM:
+                processGenerateRandom(apdu);
+                break;
+
+            case Constants.INS_CREATE_FILE:
+                processCreateFile(apdu);
+                break;
+
+            case Constants.INS_DELETE_FILE:
+                processDeleteFile(apdu);
+                break;
+
+            default:
+                ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
         }
     }
 
@@ -169,7 +178,7 @@ public class TB100Like extends Applet {
 
     /**
      * Process FSEARCH instruction (CC2)
-     *
+     * <p>
      * looking for empty word (CC2)
      * <p>
      * C-APDU: <code>00 B0 {P1-P2: offset} 04</code>
@@ -204,8 +213,7 @@ public class TB100Like extends Applet {
             while (!(_currentEF.isAvailable(offsetFound, (short) 1) || offsetFound == wordCount)) {
                 offsetFound++;
             }
-		}
-		else {
+        } else {
             wordCount = (short) (_currentDF.getLength() - _currentDF.getHeaderSize());
 
             byte childCount = _currentDF.getChildCount();
@@ -290,6 +298,51 @@ public class TB100Like extends Applet {
     }
 
     /**
+     * Process GET DATA instruction (CC2)
+     *
+     * <p>
+     * C-APDU: <code>00 CA 00 {P2: tag} {Le}</code>
+     * </p>
+     * <p>
+     * <code>{Data in EF at tag}</code>
+     * </p>
+     *
+     * @param apdu The incoming APDU object
+     */
+    void processGetData(APDU apdu) {
+        // lots of copy/paste from read binary ==> refactoring possible ;)
+        byte[] apduBuffer = apdu.getBuffer();
+        short le = apdu.setOutgoing(); // in BYTES
+        short wordCount = (short) ((short) (le + 5) / 4); // length in WORDS // 5 = 3 + 2 (1 tag + 1 length)
+
+        byte[] buffer = JCSystem.makeTransientByteArray((short) (wordCount * 4), JCSystem.CLEAR_ON_DESELECT);
+
+        if (_currentEF != null) {
+            // find if tag exits
+            buffer[0] = apduBuffer[ISO7816.OFFSET_P2];
+            short tagPosition = _currentEF.search((short) 0, buffer, (short) 0, (short) 1);
+            if (tagPosition == -1) {
+                ISOException.throwIt(Constants.SW_DATA_NOT_FOUND);
+            }
+            // get length
+            _currentEF.read(tagPosition, buffer, (short) 0, (short) 1, false);
+            byte length = buffer[1];
+            if (le != length) {
+                ISOException.throwIt((short) (0x6C00 + length));
+            }
+
+            //read !
+            _currentEF.read(tagPosition, buffer, (short) 0, wordCount, _headerParser.fileType == HeaderParser.FILETYPE_EFSZ);
+            // and send data!
+            apdu.setOutgoingLength(le);
+            apdu.sendBytesLong(buffer, (short) 2, le);
+        } else {
+            ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+        }
+
+    }
+
+    /**
      * Process WRITE BINARY instruction (CC3)
      *
      * <p>
@@ -333,6 +386,57 @@ public class TB100Like extends Applet {
 
         // and write data to file
         _currentEF.write(buffer, (short) 0, offset, wordCount);
+
+    }
+
+    /**
+     * Process PUT DATA instruction (CC3)
+     *
+     * <p>
+     * C-APDU: <code>00 DA 00 {P2: Tag} {Lc} {data} </code>
+     * </p>
+     * <p>
+     * offset: offset of first word of the file coded by P1 P2 (WORDS) to be written.
+     * </p>
+     * <p>
+     * data: data to be written in file.
+     * </p>
+     *
+     * @param apdu The incoming APDU object
+     */
+    void processPutData(APDU apdu) {
+        // TODO: check ==> security of current EF
+        // lots of copy/paste from write binary ==> refactoring possible ;)
+        // and also some from GET DATA ^^
+
+        byte[] apduBuffer = apdu.getBuffer();
+        apdu.setIncomingAndReceive();
+
+        short length = APDUHelpers.getIncomingLength(apdu); // in BYTES
+        short wordCount = (short) ((short) (length + 5) / 4); // length in WORDS // 5 = 3 + 2 (1 tag + 1 length)
+
+
+        byte[] tmpBuffer = JCSystem.makeTransientByteArray((short) 1, JCSystem.CLEAR_ON_DESELECT);
+        tmpBuffer[0] = apduBuffer[ISO7816.OFFSET_P2];
+
+        // find if tag exits
+        short tagPosition = _currentEF.search((short) 0, tmpBuffer, (short) 0, (short) 1);
+        if (tagPosition == -1) {
+            tagPosition = 0; // todo : change to find a suitable position
+        }
+        verifyOutOfFile(tagPosition, wordCount);
+
+        // copy data in a buffer
+        byte[] buffer = JCSystem.makeTransientByteArray((short) (wordCount * 4), JCSystem.CLEAR_ON_DESELECT);
+        buffer[0] = apduBuffer[ISO7816.OFFSET_P2];
+        buffer[1] = (byte) length;
+        short udcOffset = APDUHelpers.getOffsetCdata(apdu);
+        Util.arrayCopyNonAtomic(apduBuffer, udcOffset, buffer, (short) 2, length);
+
+
+        // and write data to file
+        _currentEF.write(buffer, (short) 0, tagPosition, wordCount);
+
 
     }
 
@@ -434,15 +538,15 @@ public class TB100Like extends Applet {
         File file = null;
 
         switch (_headerParser.fileType) {
-        case HeaderParser.FILETYPE_DF:
-            file = _currentDF.createDedicatedFile(offset, size, buffer, headerOffset, headerLength);
-            break;
-        case HeaderParser.FILETYPE_EFSZ:
-        case HeaderParser.FILETYPE_EFWZ:
-            file = _currentDF.createElementaryFile(offset, size, buffer, headerOffset, headerLength);
-            break;
-        default:
-            ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+            case HeaderParser.FILETYPE_DF:
+                file = _currentDF.createDedicatedFile(offset, size, buffer, headerOffset, headerLength);
+                break;
+            case HeaderParser.FILETYPE_EFSZ:
+            case HeaderParser.FILETYPE_EFWZ:
+                file = _currentDF.createElementaryFile(offset, size, buffer, headerOffset, headerLength);
+                break;
+            default:
+                ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
         }
 
         if (file == null) {
@@ -503,11 +607,11 @@ public class TB100Like extends Applet {
 
     }
 
-	private void verifyResetSinceLastCall() {
-		if (_transientData[0] != (short) -1) {
-			_transientData[0] = (short) -1;
-			_currentDF = _masterFile;
-			_currentEF = null;
-		}
-	}
+    private void verifyResetSinceLastCall() {
+        if (_transientData[0] != (short) -1) {
+            _transientData[0] = (short) -1;
+            _currentDF = _masterFile;
+            _currentEF = null;
+        }
+    }
 }
