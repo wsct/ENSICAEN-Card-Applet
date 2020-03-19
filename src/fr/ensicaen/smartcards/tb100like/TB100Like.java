@@ -287,7 +287,7 @@ public class TB100Like extends Applet {
             // get header of each file in current DF
             while (fileChild != null && offset < le) {
                 fileChild.getHeader(buffer, offset);
-                offset += fileChild.getHeaderSize();
+                offset += (short) (fileChild.getHeaderSize() << 2);
                 fileChild = _currentDF.getChild(++currentChildNumber);
             }
         }
