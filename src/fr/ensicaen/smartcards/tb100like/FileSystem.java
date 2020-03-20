@@ -179,7 +179,7 @@ public class FileSystem {
             outputOffset += freeLength;
         }
 
-        return (short) (outputOffset + length);
+        return outputOffset;
     }
 
     /**

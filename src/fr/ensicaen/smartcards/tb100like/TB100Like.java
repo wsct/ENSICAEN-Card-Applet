@@ -253,9 +253,10 @@ public class TB100Like extends Applet {
         short wordCount = (short) ((short) (le + 3) / 4);
         byte[] buffer = JCSystem.makeTransientByteArray((short) (wordCount * 4), JCSystem.CLEAR_ON_DESELECT);
 
+        short offset;
         if (_currentEF != null) {
             // an EF is selected ==> read binary
-            short offset = Util.getShort(apdu.getBuffer(), ISO7816.OFFSET_P1); // in WORDS
+            offset = Util.getShort(apdu.getBuffer(), ISO7816.OFFSET_P1); // in WORDS
 
             verifyOutOfFile(offset, wordCount);
 
@@ -266,7 +267,7 @@ public class TB100Like extends Applet {
 
         } else {
             // no EF selected ==> DIR
-            short offset = 0;
+            offset = 0;
             byte currentChildNumber = 0;
             File fileChild = _currentDF.getChild(currentChildNumber);
             // get header of each file in current DF
@@ -276,6 +277,10 @@ public class TB100Like extends Applet {
                 fileChild = _currentDF.getChild(++currentChildNumber);
             }
         }
+
+        // Pad with FF
+        Util.arrayFillNonAtomic(buffer, offset, (short) (le - offset), (byte) FileSystem.FREE_BYTE);
+
         // and send data!
         apdu.setOutgoingLength(le);
         apdu.sendBytesLong(buffer, (short) 0, le);

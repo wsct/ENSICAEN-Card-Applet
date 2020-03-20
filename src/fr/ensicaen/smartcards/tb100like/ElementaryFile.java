@@ -80,9 +80,14 @@ public class ElementaryFile extends File {
      * @return offset + length;
      */
     public short read(short offset, byte[] output, short outputOffset, short length, boolean secureRead) {
-        _fileSystem.read(getInMemoryOffset((short) (offset << 2)), output, outputOffset, (short) (length << 2), secureRead);
+        short readableLength;
+        if (length > (short) (_length - (_headerLength >> 2) - offset)) {
+            readableLength = (short) (_length - (_headerLength >> 2) - offset);
+        } else {
+            readableLength = length;
+        }
 
-        return (short) (offset + length);
+        return (short) (_fileSystem.read(getInMemoryOffset((short) (offset << 2)), output, outputOffset, (short) (readableLength << 2), secureRead) >> 2);
     }
 
     /**
