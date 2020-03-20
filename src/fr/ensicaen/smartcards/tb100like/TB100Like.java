@@ -215,24 +215,9 @@ public class TB100Like extends Applet {
             }
         } else {
             wordCount = (short) (_currentDF.getLength() - _currentDF.getHeaderSize());
-
-            byte childCount = _currentDF.getChildCount();
-            if (childCount > 0) {
-                byte iChild = 0;
-                short begin = 0;
-                short end = 0;
-                do {
-                    File currentFile = _currentDF.getChild(iChild);
-                    begin = (short) (currentFile._inParentBodyOffset << 2);
-                    end = (short) (begin + currentFile._length);
-
-                    if (offsetFound >= begin) {
-                        offsetFound = end;
-                    }
-                    iChild++;
-                } while (iChild < childCount && offsetFound > begin);
+            while (!(_currentDF.isAvailable(offsetFound, (short) 1) || offsetFound == wordCount)) {
+                offsetFound++;
             }
-
         }
 
         // check that there is still some empty space

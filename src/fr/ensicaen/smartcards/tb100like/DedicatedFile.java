@@ -42,8 +42,9 @@ public class DedicatedFile extends File {
      */
     public final boolean isAvailable(short localWordOffset, short length) {
         for (byte i = 0; i < _childrenCount; i++) {
-            if (localWordOffset < (short) (_children[i].getOffset() + _children[i].getLength())
-                    || (short) (localWordOffset + length) > _children[i].getOffset()) {
+            boolean neverOverlap = localWordOffset > (short) ((short) (_children[i].getOffset() >> 2) + _children[i].getLength() - 1)
+                    || localWordOffset + length - 1 < (short) (_children[i].getOffset() >> 2);
+            if (!neverOverlap) {
                 return false;
             }
         }
@@ -77,7 +78,6 @@ public class DedicatedFile extends File {
      * @param header       Buffer containing the header of the file.
      * @param headerOffset Offset of the header in previous buffer (BYTES).
      * @param headerLength Length of the header (BYTES).
-	 * 
      * @return Index of the new file.
      */
     public final DedicatedFile createDedicatedFile(short offset, short size, byte[] header, short headerOffset,
@@ -113,7 +113,6 @@ public class DedicatedFile extends File {
      * @param header       Buffer containing the header of the file.
      * @param headerOffset Offset of the header in previous buffer (BYTES).
      * @param headerLength Length of the header (BYTES).
-	 * 
      * @return Index of the new file.
      */
     public final ElementaryFile createElementaryFile(short offset, short size, byte[] header, short headerOffset,
@@ -145,7 +144,6 @@ public class DedicatedFile extends File {
      * Deletes a file by its FID.
      *
      * @param fid FID of the file.
-	 * 
      * @return false is the file is not found.
      */
     public final boolean deleteFile(short fid) {
@@ -193,7 +191,6 @@ public class DedicatedFile extends File {
      * existence.
      *
      * @param nth Index of the file in the DF.
-	 * 
      * @param nth Index of the child (starts at 0)
      */
     public final File getChild(byte nth) {
@@ -208,13 +205,13 @@ public class DedicatedFile extends File {
     public final boolean hasChild(byte nth) {
         return nth >= 0 && nth < _childrenCount;
     }
-    
-    
+
+
     /**
-     *Returns the number of children
+     * Returns the number of children
      */
-    public final byte getChildCount(){
-	    return _childrenCount;
+    public final byte getChildCount() {
+        return _childrenCount;
     }
-    
+
 }
